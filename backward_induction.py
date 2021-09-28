@@ -95,9 +95,9 @@ class AmericanOptionPricer:
     print("time path gen: {}".format(time.time()-t1), end=" ")
     if self.use_rnn:
       hs = self.compute_hs(stock_paths)
-    disc_factor = np.math.exp((-model.drift) * model.maturity /
-               (model.nb_dates))
+    disc_factor = 1
     immediate_exercise_value = self.payoff.eval(stock_paths[:, :, -1])
+    logger.debug(f"im {immediate_exercise_value}")
     values = immediate_exercise_value
     for date in range(stock_paths.shape[2] - 2, 0, -1):
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])

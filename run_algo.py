@@ -54,7 +54,7 @@ flags.DEFINE_bool("generate_pdf", False, "Whether to generate latex tables")
 _CSV_HEADERS = ['algo', 'model', 'payoff',
                 'hurst', 'nb_stocks',
                 'nb_paths', 'nb_dates', 'nb_epochs', 'hidden_size', 'hidden_size2',
-                'step_size', 'gamma', 'eps', 'lr',
+                'step_size', 'gamma', 'eps', 'lr', "strike",
                 'train_ITM_only', 'use_path',
                 'price', 'duration']
 

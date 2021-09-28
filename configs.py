@@ -12,10 +12,10 @@ PricePerNbPaths = FigureType("PricePerNbPaths")
 @dataclass
 class _DefaultConfig:
   algos: Iterable[str] = ("DOS",)
-  nb_dates: Iterable[int] = (10,)
+  nb_dates: Iterable[int] = (20,)
   stock_models: Iterable[str] = ('dice_model',)
   strikes: Iterable[int] = (0,)
-  nb_paths: Iterable[int] = (10,)
+  nb_paths: Iterable[int] = (10,20,)
   nb_runs: int = 30
   nb_stocks: Iterable[int] = (1,)
   payoffs: Iterable[str] = ('Identity',)
@@ -38,7 +38,7 @@ Comparison prices and computation time
 
 @dataclass
 class _DimensionTable(_DefaultConfig):
-  nb_stocks: Iterable[int] = (5,10)
+  nb_stocks: Iterable[int] = (1,5)
 
 
 table_spots_Dim_BS_MaxCall = _DimensionTable()
