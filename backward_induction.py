@@ -15,7 +15,7 @@ from loguru import logger
 class AmericanOptionPricer:
   """Computes the price of an American Option using backward recusrion.
   """
-  def __init__(self, model, payoff, use_rnn=False, train_ITM_only=True,
+  def __init__(self, model, payoff,use_rnn=False, train_ITM_only=True,
                use_path=False):
 
     #class model: The stochastic process model of the stock (e.g. Black Scholes).
@@ -32,6 +32,7 @@ class AmericanOptionPricer:
 
     #bool: only the paths that are In The Money (ITM) are used for the training.
     self.train_ITM_only = train_ITM_only
+
 
   def calculate_continuation_value(self):
     """Computes the continuation value of an american option at a given date.
@@ -85,7 +86,6 @@ class AmericanOptionPricer:
     """It computes the price of an American Option using a backward recusrion.
     """
     logger.debug("start pricing")
-    model = self.model
     t1 = time.time() 
     logger.debug("gggggg")
     stock_paths = self.model.generate_paths()
@@ -93,11 +93,12 @@ class AmericanOptionPricer:
     self.split = int(len(stock_paths)/2)
     logger.debug(f"split is {self.split}")
     print("time path gen: {}".format(time.time()-t1), end=" ")
+    step = 1
     if self.use_rnn:
       hs = self.compute_hs(stock_paths)
     disc_factor = 1
     immediate_exercise_value = self.payoff.eval(stock_paths[:, :, -1])
-    logger.debug(f"im {immediate_exercise_value}")
+    logger.debug(f"immmer immer")
     values = immediate_exercise_value
     for date in range(stock_paths.shape[2] - 2, 0, -1):
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])
@@ -106,16 +107,19 @@ class AmericanOptionPricer:
       else:
         h = None
       if self.use_path:
-        stopping_rule = self.stop(
+        stopping_rule = self.stop(step, 
           stock_paths[:, :, :date+1], immediate_exercise_value,
           values * disc_factor, h=h)
       else:
-        stopping_rule = self.stop(
+        logger.debug("starting stopping rule")
+        stopping_rule = self.stop(step, 
           stock_paths[:, :, date], immediate_exercise_value,
           values*disc_factor, h=h)
+        logger.debug("ending stopping rule")
       which = stopping_rule > 0.5
       values[which] = immediate_exercise_value[which]
       values[~which] *= disc_factor
+      step +=1
     payoff_0 = self.payoff.eval(stock_paths[:, :, 0])[0]
     # IMPORTANT change to values[self.split:] to get test error
     return max(payoff_0, np.mean(values[:self.split]) * disc_factor)

@@ -15,10 +15,10 @@ class _DefaultConfig:
   nb_dates: Iterable[int] = (20,)
   stock_models: Iterable[str] = ('dice_model',)
   strikes: Iterable[int] = (0,)
-  nb_paths: Iterable[int] = (10,20,)
-  nb_runs: int = 30
+  nb_paths: Iterable[int] = (10,)
+  nb_runs: int = 1
   nb_stocks: Iterable[int] = (1,)
-  payoffs: Iterable[str] = ('Identity',)
+  payoffs: Iterable[str] = ('MaxCall',)
   hidden_size: Iterable[int] = (4,)
   hidden_size2: Iterable[int] = (4,)
   nb_epochs: Iterable[int] = (30,)
@@ -38,7 +38,7 @@ Comparison prices and computation time
 
 @dataclass
 class _DimensionTable(_DefaultConfig):
-  nb_stocks: Iterable[int] = (1,5)
+  nb_stocks: Iterable[int] = (1,)
 
 
 table_spots_Dim_BS_MaxCall = _DimensionTable()

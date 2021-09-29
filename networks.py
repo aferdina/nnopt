@@ -46,6 +46,7 @@ class NetworkDOS(nn.Module):
     x = self.sigmoid(x)
     return x
   
+  
 
 class NetworklogDOS(nn.Module):
   def __init__(self, nb_stocks, hidden_size=10):
