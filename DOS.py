@@ -42,14 +42,17 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
       self.state_size = model.nb_stocks * (model.nb_dates+1)
     else:
       self.state_size = model.nb_stocks
+    self.neural_stopping = OptimalStoppingOptimization(
+      self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
+      nb_iters=self.nb_epochs,eps = 0.001)
 
   def stop(self, step, stock_values, immediate_exercise_values,
            discounted_next_values, h=None, new_init =False):
     """ see base class """
     logger.debug("initialzing neural network")
-    self.neural_stopping = OptimalStoppingOptimization(
+    """ self.neural_stopping = OptimalStoppingOptimization(
       self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-      nb_iters=self.nb_epochs,eps = 0.001)
+      nb_iters=self.nb_epochs,eps = 0.001) """
     logger.debug(f"step given by {step}")
     if self.use_path:
       # shape [paths, stocks, dates up to now]
@@ -110,7 +113,7 @@ class OptimalStoppingOptimization(object):
           loss = self._Loss(values)
           loss.backward()
           optimizer.step()
-      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networks/phase_{step}")
+      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networkscopy/phase_{step}")
       os.makedirs(fpath, exist_ok=True)
       tmp_path = fpath + f"/model_epoch_{i}.pt"
       logger.debug(f"loss: {loss}")

@@ -14,6 +14,7 @@ import networkx as nx
 import plotly.graph_objects as go
 from networks import NetworkDOS
 import torch
+import corr_stopp
 
 num = 10  # number of iterations
 
@@ -35,6 +36,8 @@ app.layout = html.Div(
         [
             dcc.Graph(id="live-update-graph-scatter", animate=True),
             html.Div(id="step"),
+            dcc.Graph(id="live-update-graph-scatter2", animate=True),
+            html.Div(id="step2"),
             # cyto.Cytoscape(elements=networkgraph),
             dcc.Interval(
                 id="interval-component",
@@ -49,6 +52,8 @@ app.layout = html.Div(
     [
         Output("live-update-graph-scatter", "figure"),
         Output("step", "children"),
+        Output("live-update-graph-scatter2", "figure"),
+        Output("step2", "children"),
     ],
     Input("interval-component", "n_intervals"),
 )
@@ -58,25 +63,63 @@ def update_graph_scatter(x):
         plot_nn.step += 1
     logger.trace("Play action.")
     model = NetworkDOS(nb_stocks=1, hidden_size=4)
+    #generate non copied case
     fpath = f"/Users/andreferdinand/Desktop/Coding2/output/neural_networks/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
     checkpoint = torch.load(fpath)
     model.load_state_dict(checkpoint['model_state_dict'])
-    logger.debug("happy")
-    stock_values = np.reshape([1., 2., 3., 4., 5., 6.], newshape=(6, 1))
-    input = torch.from_numpy(stock_values).double()
-    logger.debug(f"input{input}")
-    #input = X_inputs = torch.from_numpy(stock_values).double()
+    stock_values_test = np.reshape([1,2,3,4,5,6],(6,1))
+    input_test = torch.from_numpy(stock_values_test).double()
+    stock_values = np.linspace(0,6,num=50)
+    stock_values = np.reshape(stock_values,(50,1))
+    input = torch.from_numpy(stock_values)
+    input = input.double()
     model.train(False)
+    model.double()
     out_data = model(input)
+    #logger.debug(f"list of q values{np.round(model(input_test).detach().numpy().flatten().tolist())}")
+    loss = checkpoint['loss']
+    #logger.debug(f"true stopping times {corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten()}")
+    if plot_nn.epoch ==28:
+        logger.debug(f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten())}")
+        logger.debug(f"approx. qs{np.round(model(input_test).detach().numpy().flatten())}")
+        corr_stopp.mistakes += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten())-np.round(model(input_test).detach().numpy().flatten())))
 
-    reward_figure = go.Figure(
+    
+    reward_figure1 = go.Figure(
         go.Scatter(
-            x=np.arange(len(6)),
-            y=out_data,
+            x=list(np.linspace(1,6,50)),
+            y=list(out_data.detach().numpy().flatten()),
         )
     )
-   # print(np.concatenate(play_trained_model.old_rewards).ravel())
-    return reward_figure, plot_nn.step
+    
+    reward_figure1.update_layout(yaxis_range=[0,1])
+    text1 = f"step in the game: {plot_nn.step} \n learning epoch: {plot_nn.epoch} \n loss: {loss} \n number of mistakes {corr_stopp.mistakes}"
+
+    #generate copied model 
+    fpath2 = f"/Users/andreferdinand/Desktop/Coding2/output/neural_networkscopy/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
+    checkpoint2 = torch.load(fpath2)
+    model.load_state_dict(checkpoint2['model_state_dict'])
+    model.train(False)
+    model.double()
+    out_data2 = model(input)
+    loss2 = checkpoint2['loss']
+    #logger.debug(f"list of q values copied {np.round(model(input_test).detach().numpy().flatten().tolist())}")
+    if plot_nn.epoch ==28:
+        logger.debug(f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten())}")
+        logger.debug(f"approx. qs copy{np.round(model(input_test).detach().numpy().flatten())}")
+        corr_stopp.mistakes2 += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:][0])-np.round(model(input_test).detach().numpy().flatten())))
+
+    
+    reward_figure2 = go.Figure(
+        go.Scatter(
+            x=list(np.linspace(1,6,50)),
+            y=list(out_data2.detach().numpy().flatten()),
+        )
+    )
+    plot_nn.epoch +=1
+    reward_figure2.update_layout(yaxis_range=[0,1])
+    text2 = f"step in the game: {plot_nn.step} \n learning epoch: {plot_nn.epoch} \n loss: {loss2} \n number of mistakes {corr_stopp.mistakes2}"
+    return reward_figure1, text1, reward_figure2, text2
     # return {'data': traces}
 
 
