@@ -63,9 +63,9 @@ def update_graph_scatter(x):
         plot_nn.epoch = 0
         plot_nn.step += 1
     logger.trace("Play action.")
-    model = NetworkeasyDOS(nb_stocks=1, hidden_size=4)
+    model = NetworkDOS(nb_stocks=1, hidden_size=4)
     #generate non copied case
-    fpath = f"/Users/andreferdinand/Desktop/Coding2/output/neural_networkseasy/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
+    fpath = f"/Users/andreferdinand/Desktop/Coding2/output/neural_networks/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
     checkpoint = torch.load(fpath)
     model.load_state_dict(checkpoint['model_state_dict'])
     stock_values_test = np.reshape([1,2,3,4,5,6],(6,1))
@@ -97,7 +97,7 @@ def update_graph_scatter(x):
     text1 = f"step in the game: {plot_nn.step} \n learning epoch: {plot_nn.epoch} \n loss: {loss} \n number of mistakes {corr_stopp.mistakes}"
 
     #generate copied model 
-    fpath2 = f"/Users/andreferdinand/Desktop/Coding2/output/neural_networkseasycopy2/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
+    fpath2 = f"/Users/andreferdinand/Desktop/Coding2/output/neural_networkscopy/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
     checkpoint2 = torch.load(fpath2)
     model.load_state_dict(checkpoint2['model_state_dict'])
     model.train(False)
