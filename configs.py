@@ -26,6 +26,7 @@ class _DefaultConfig:
   step_size: Iterable[int] = (50,)
   eps: Iterable[float] = (0.001, )
   lr: Iterable[float] = (0.01,)
+  copy : Iterable[bool] = (True,)
   train_ITM_only: Iterable[bool] = (True,)
   use_path: Iterable[bool] = (False,)
   representations: Iterable[str] = ('TablePriceDuration',)

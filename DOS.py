@@ -4,7 +4,7 @@ It is the implementation of the deep optimal stopping (DOS) introduced in
 (deep optimal stopping, Becker, Cheridito and Jentzen, 2020).
 TODO: rewrite such that new initializazion is needed
 """
-
+import traceback
 from matplotlib.pyplot import step
 import numpy as np
 import torch
@@ -32,27 +32,30 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
   """
 
   def __init__(self, model, payoff, nb_epochs=20, nb_batches=None,
-               hidden_size=10, use_path=False, eps = 0.001):
+               hidden_size=10, use_path=False, eps=0.001, copy=True):
     del nb_batches
     super().__init__(model, payoff ,use_path=use_path)
     self.hidden_size = hidden_size
     self.eps = eps
     self.nb_epochs = nb_epochs
+    self.copy = copy
     if self.use_path:
       self.state_size = model.nb_stocks * (model.nb_dates+1)
     else:
       self.state_size = model.nb_stocks
-    self.neural_stopping = OptimalStoppingOptimization(
-      self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-      nb_iters=self.nb_epochs,eps = 0.001)
+    if copy:
+      self.neural_stopping = OptimalStoppingOptimization(
+        self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
+        nb_iters=self.nb_epochs,eps=0.001)  
 
   def stop(self, step, stock_values, immediate_exercise_values,
-           discounted_next_values, h=None, new_init =False):
+           discounted_next_values, copy=True, h=None, new_init =False):
     """ see base class """
-    logger.debug("initialzing neural network")
-    """ self.neural_stopping = OptimalStoppingOptimization(
-      self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-      nb_iters=self.nb_epochs,eps = 0.001) """
+  
+    if not copy:
+          self.neural_stopping = OptimalStoppingOptimization(
+            self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
+            nb_iters=self.nb_epochs,eps = 0.001)    
     logger.debug(f"step given by {step}")
     if self.use_path:
       # shape [paths, stocks, dates up to now]
@@ -63,6 +66,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
           (stock_values.shape[0], stock_values.shape[1],
            self.model.nb_dates + 1 - stock_values.shape[2]))], axis=-1)
       stock_values = stock_values.reshape((stock_values.shape[0], -1))
+    
     self.neural_stopping.train_network(step,
       stock_values[:self.split],
       immediate_exercise_values.reshape(-1, 1)[:self.split],
@@ -84,9 +88,9 @@ class OptimalStoppingOptimization(object):
     self.nb_paths = nb_paths
     self.nb_iters = nb_iters
     self.batch_size = batch_size
-    self.network = networks.NetworkDOS(
+    self.network = networks.NetworkeasyDOS(
       self.nb_stocks, hidden_size=hidden_size).double()
-    self.network.apply(init_weights)
+    self.network.apply(init_weights)  
 
   def _Loss(self, X):
     return -torch.mean(X)
@@ -97,7 +101,7 @@ class OptimalStoppingOptimization(object):
     discounted_next_values = torch.from_numpy(discounted_next_values).double()
     immediate_exercise_value = torch.from_numpy(immediate_exercise_value).double()
     X_inputs = torch.from_numpy(stock_values).double()
-
+    logger.debug("debug train_network")
     self.network.train(True)
     ones = torch.ones(len(discounted_next_values))
     for i in range(self.nb_iters):
@@ -113,7 +117,7 @@ class OptimalStoppingOptimization(object):
           loss = self._Loss(values)
           loss.backward()
           optimizer.step()
-      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networkscopy/phase_{step}")
+      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networkseasycopy2/phase_{step}")
       os.makedirs(fpath, exist_ok=True)
       tmp_path = fpath + f"/model_epoch_{i}.pt"
       logger.debug(f"loss: {loss}")

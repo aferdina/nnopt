@@ -1,5 +1,6 @@
 import torch.nn as nn
-
+import torch 
+from breludef import boundedrelu
 
 class NetworkNLSM(nn.Module):
   def __init__(self, nb_stocks, hidden_size=10):
@@ -20,6 +21,28 @@ class NetworkNLSM(nn.Module):
     x = self.layer3(x)
     return x
 
+def brelu(input):
+  """bounded Relu function
+
+  Args:
+      input (torch.tensor): input of activation function
+
+  Returns:
+      [torch.tensor]: bounded relu output
+  """
+  return torch.minimum(torch.relu(input),torch.tensor(1))
+
+class UBRelu(nn.Module):
+
+    def __init__(self):
+        '''
+        Init method.
+        '''
+        super().__init__()
+
+    def forward(self, input):
+          
+      return brelu(input) 
 
 class NetworkDOS(nn.Module):
   def __init__(self, nb_stocks, hidden_size=10):
@@ -44,6 +67,34 @@ class NetworkDOS(nn.Module):
     x = self.bn2(x)
     x = self.layer3(x)
     x = self.sigmoid(x)
+    return x
+
+  
+class NetworkeasyDOS(nn.Module):
+  def __init__(self, nb_stocks, hidden_size=10):
+    super(NetworkeasyDOS, self).__init__()
+    H = hidden_size
+    self.bn0 = nn.BatchNorm1d(num_features=nb_stocks)
+    self.layer1 = nn.Linear(nb_stocks, H)
+    self.leakyReLU = nn.LeakyReLU(0.5)
+    self.sigmoid = nn.Sigmoid()
+    self.tanh = nn.Tanh()
+    self.relu = nn.ReLU()
+    self.brelu = UBRelu()
+    self.bn1 = nn.BatchNorm1d(num_features=H)
+    self.layer2 = nn.Linear(H, H)
+    self.bn2 = nn.BatchNorm1d(num_features=H)
+    self.layer3 = nn.Linear(H, 1)
+    self.bn3 = nn.BatchNorm1d(num_features=1)
+    self.bbrelu = boundedrelu.apply
+
+  def forward(self, x):
+    x = self.bn0(x)
+    x = self.layer1(x)
+    x = self.relu(x)
+    x = self.bn2(x)
+    x = self.layer3(x)
+    x = self.bbrelu(x)
     return x
   
   

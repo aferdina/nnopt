@@ -9,6 +9,7 @@ import csv
 import itertools
 import multiprocessing
 import socket
+import traceback 
 import random
 import time
 #import psutil
@@ -55,7 +56,7 @@ _CSV_HEADERS = ['algo', 'model', 'payoff',
                 'hurst', 'nb_stocks',
                 'nb_paths', 'nb_dates', 'nb_epochs', 'hidden_size', 'hidden_size2',
                 'step_size', 'gamma', 'eps', 'lr', "strike",
-                'train_ITM_only', 'use_path',
+                'train_ITM_only', 'copy' ,'use_path',
                 'price', 'duration']
 
 _PAYOFFS = {
@@ -106,7 +107,7 @@ def _run_algos():
             config.stock_models, config.strikes, 
             config.nb_epochs, config.hidden_size, config.hidden_size2,
             config.step_size, config.gamma,
-            config.eps, config.lr,
+            config.eps, config.lr, config.copy, 
             config.train_ITM_only, config.use_path))
         # random.shuffle(combinations)
         for params in combinations:
@@ -141,31 +142,31 @@ def _run_algo(
         metrics_fpath, algo, nb_dates, nb_paths,
         nb_stocks, payoff, stock_model, strike,
         nb_epochs, hidden_size=10, hidden_size2=10,  
-        step_size= 1, gamma=0.99, eps = 0.001, lr = 0.001,
+        step_size= 1, gamma=0.99, eps = 0.001, lr = 0.001, copy = True, 
         train_ITM_only=True, use_path=False):
         """This functions runs one algo for option pricing. It is called by _run_algos()
         which is called in main(). Below the inputs are listed which have to be
         specified in the config that is passed to main().
 
         Args:
-            metrics_fpath ([type]): [description]
-            algo ([type]): [description]
-            nb_dates ([type]): [description]
-            nb_paths ([type]): [description]
-            nb_stocks ([type]): [description]
-            payoff ([type]): [description]
-            stock_model ([type]): [description]
-            strike ([type]): [description]
-            nb_epochs ([type]): [description]
-            hidden_size (int, optional): [description]. Defaults to 10.
-            hidden_size2 (int, optional): [description]. Defaults to 10.
-            factors (tuple, optional): [description]. Defaults to (1.,1.,1.).
-            step_size (int, optional): [description]. Defaults to 1.
-            gamma (float, optional): [description]. Defaults to 0.99.
-            eps (float, optional): [description]. Defaults to 0.001.
-            lr (float, optional): [description]. Defaults to 0.001.
-            train_ITM_only (bool, optional): [description]. Defaults to True.
-            use_path (bool, optional): [description]. Defaults to False.
+            metrics_fpath ([type]): path where goodness of the algorithm is stored 
+            algo ([type]): name of used algo 
+            nb_dates ([type]): number of dates, used in the optimal stopping problem
+            nb_paths ([type]): number of paths; 1/2 is used for training, other half for evaluating
+            nb_stocks ([type]): number of dices in the game 
+            payoff ([type]): name of used payoff function
+            stock_model ([type]): used stock model 
+            strike ([type]): strike price in the stopping problem 
+            nb_epochs ([type]): number of epochs used for training 
+            hidden_size (int, optional): hidden size of neural net
+            hidden_size2 (int, optional): if deeper neural net is used 
+            step_size (int, optional): Step size of training algorithm 
+            gamma (float, optional): Discount factor in the game 
+            eps (float, optional): stopping criterium for learning algorithm 
+            lr (float, optional): learning rate for adapting neural network
+            copy (bool, optional): whether or not copying the weights of the period before 
+            train_ITM_only (bool, optional): [description]. bool, if only use paths, which are in the money
+            use_path (bool, optional): [description]. bool, whether using a whole trajectory 
         """
         logger.debug("in algo")
         print(algo, nb_paths, '... ', end="")
@@ -174,8 +175,11 @@ def _run_algo(
             nb_paths=nb_paths, nb_dates=nb_dates)
         if algo in ['DOS']:
             logger.debug("try pricer")
-            pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
-                            hidden_size=hidden_size, use_path=use_path, eps=eps)
+            try: 
+                pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
+                            hidden_size=hidden_size, use_path=use_path, eps=eps, copy=copy)
+            except Exception: 
+                print(traceback.format_exc())
             logger.debug(f"pricer introduced")
         else:
             pass
@@ -206,6 +210,7 @@ def _run_algo(
         metrics_['gamma'] = gamma
         metrics_['eps'] = eps
         metrics_['lr'] = lr
+        metrics_['copy'] = copy
         metrics_['train_ITM_only'] = train_ITM_only
         metrics_['use_path'] = use_path
         metrics_['price'] = price

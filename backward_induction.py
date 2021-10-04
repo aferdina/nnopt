@@ -11,12 +11,13 @@ TODO: rewrite function in cython
 import numpy as np
 import time
 from loguru import logger
+from numpy.lib.function_base import copy
 
 class AmericanOptionPricer:
   """Computes the price of an American Option using backward recusrion.
   """
   def __init__(self, model, payoff,use_rnn=False, train_ITM_only=True,
-               use_path=False):
+               use_path=False, copy=True):
 
     #class model: The stochastic process model of the stock (e.g. Black Scholes).
     self.model = model
@@ -32,6 +33,9 @@ class AmericanOptionPricer:
 
     #bool: only the paths that are In The Money (ITM) are used for the training.
     self.train_ITM_only = train_ITM_only
+
+    #bool: copy weights or not
+    self.copy = copy
 
 
   def calculate_continuation_value(self):
@@ -109,12 +113,12 @@ class AmericanOptionPricer:
       if self.use_path:
         stopping_rule = self.stop(step, 
           stock_paths[:, :, :date+1], immediate_exercise_value,
-          values * disc_factor, h=h)
+          values * disc_factor, copy=self.copy, h=h)
       else:
         logger.debug("starting stopping rule")
         stopping_rule = self.stop(step, 
           stock_paths[:, :, date], immediate_exercise_value,
-          values*disc_factor, h=h)
+          values*disc_factor, copy=self.copy, h=h)
         logger.debug("ending stopping rule")
       which = stopping_rule > 0.5
       values[which] = immediate_exercise_value[which]
