@@ -15,7 +15,7 @@ class _DefaultConfig:
   nb_dates: Iterable[int] = (20,)
   stock_models: Iterable[str] = ('dice_model',)
   strikes: Iterable[int] = (0,)
-  nb_paths: Iterable[int] = (10,)
+  nb_paths: Iterable[int] = (200,)
   nb_runs: int = 1
   nb_stocks: Iterable[int] = (1,)
   payoffs: Iterable[str] = ('MaxCall',)
@@ -26,7 +26,7 @@ class _DefaultConfig:
   step_size: Iterable[int] = (50,)
   eps: Iterable[float] = (0.001, )
   lr: Iterable[float] = (0.01,)
-  copy : Iterable[bool] = (True,)
+  copy : Iterable[bool] = (False,)
   train_ITM_only: Iterable[bool] = (True,)
   use_path: Iterable[bool] = (False,)
   representations: Iterable[str] = ('TablePriceDuration',)

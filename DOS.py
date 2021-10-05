@@ -88,7 +88,7 @@ class OptimalStoppingOptimization(object):
     self.nb_paths = nb_paths
     self.nb_iters = nb_iters
     self.batch_size = batch_size
-    self.network = networks.NetworkeasyDOS(
+    self.network = networks.NetworkDOS(
       self.nb_stocks, hidden_size=hidden_size).double()
     self.network.apply(init_weights)  
 
@@ -117,7 +117,7 @@ class OptimalStoppingOptimization(object):
           loss = self._Loss(values)
           loss.backward()
           optimizer.step()
-      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networkseasycopy2/phase_{step}")
+      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networks2/phase_{step}")
       os.makedirs(fpath, exist_ok=True)
       tmp_path = fpath + f"/model_epoch_{i}.pt"
       logger.debug(f"loss: {loss}")
