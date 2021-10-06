@@ -14,6 +14,7 @@ import plot_nn
 import plotly.graph_objects as go
 from networks import NetworkDOS
 from networks import NetworkeasyDOS
+from networks import NetworksoftlogDOS
 import torch
 import corr_stopp
 
@@ -63,7 +64,7 @@ def update_graph_scatter(x):
         plot_nn.epoch = 0
         plot_nn.step += 1
     logger.trace("Play action.")
-    model = NetworkDOS(nb_stocks=1, hidden_size=4)
+    model = NetworksoftlogDOS(nb_stocks=1, hidden_size=4)
     #generate non copied case
     fpath = f"../output/neural_networks4/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
     checkpoint = torch.load(fpath)

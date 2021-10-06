@@ -22,6 +22,7 @@ import shutil
 sys.path.insert(0,os.path.dirname("."))
 import configs_getter
 import DOS
+import logsoftmaxDOS
 import payoff
 import stock_model_fast
 from loguru import logger
@@ -74,7 +75,8 @@ _STOCK_MODELS = {
 }
 
 _ALGOS = {
-    "DOS": DOS.DeepOptimalStopping
+    "DOS": DOS.DeepOptimalStopping,
+    "logsoftDOS": logsoftmaxDOS.DeepOptimalStopping
 }
 
 
@@ -173,7 +175,7 @@ def _run_algo(
         payoff_ = _PAYOFFS[payoff](strike)
         stock_model_ = _STOCK_MODELS[stock_model](values =[1,2,3,4,5,6],prob=[0.167,0.166,0.167,0.166,0.167,0.167],nb_stocks=nb_stocks,
             nb_paths=nb_paths, nb_dates=nb_dates)
-        if algo in ['DOS']:
+        if algo in ['DOS','logsoftDOS']:
             logger.debug("try pricer")
             try: 
                 pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
