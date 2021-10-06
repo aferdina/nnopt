@@ -91,7 +91,7 @@ class AmericanOptionPricer:
     """
     logger.debug("start pricing")
     t1 = time.time() 
-    logger.debug("gggggg")
+    #logger.debug("gggggg")
     stock_paths = self.model.generate_paths()
     logger.debug(f"paths are {stock_paths.shape}")
     self.split = int(len(stock_paths)/2)
@@ -102,10 +102,22 @@ class AmericanOptionPricer:
       hs = self.compute_hs(stock_paths)
     disc_factor = 1
     immediate_exercise_value = self.payoff.eval(stock_paths[:, :, -1])
-    logger.debug(f"immmer immer")
+    #print(np.shape(stock_paths[:,:,-1])) -->(200,1)
+    #print(np.shape(immediate_exercise_value)) -->(200,)
+    #logger.debug(f"immmer immer")
     values = immediate_exercise_value
     for date in range(stock_paths.shape[2] - 2, 0, -1):
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])
+
+      #empirical Q values
+      logger.debug(f"empirical Q vaules:")
+      Q_emp = np.empty(shape=(6,))
+      for i in [1,2,3,4,5,6]:
+        which2 = (immediate_exercise_value == i)
+        Q_emp[i-1] = np.mean(values[which2])
+      logger.debug(Q_emp)
+
+
       if self.use_rnn:
         h = hs[date]
       else:
@@ -115,14 +127,16 @@ class AmericanOptionPricer:
           stock_paths[:, :, :date+1], immediate_exercise_value,
           values * disc_factor, copy=self.copy, h=h)
       else:
-        logger.debug("starting stopping rule")
+        #logger.debug("starting stopping rule")
         stopping_rule = self.stop(step, 
           stock_paths[:, :, date], immediate_exercise_value,
-          values*disc_factor, copy=self.copy, h=h)
-        logger.debug("ending stopping rule")
-      which = stopping_rule > 0.5
+          values * disc_factor, copy=self.copy, h=h)
+        #ogger.debug("ending stopping rule")
+      which = (stopping_rule > 0.5)
+      #print(np.sum(which))
       values[which] = immediate_exercise_value[which]
       values[~which] *= disc_factor
+      
       step +=1
     payoff_0 = self.payoff.eval(stock_paths[:, :, 0])[0]
     # IMPORTANT change to values[self.split:] to get test error

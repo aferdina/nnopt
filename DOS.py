@@ -13,10 +13,11 @@ import torch.utils.data as tdata
 from torch.utils.data import distributed
 import os
 from loguru import logger
+import corr_stopp
 
 import backward_induction
 import networks
-
+import traceback
 
 def init_weights(m):
   if isinstance(m, torch.nn.Linear):
@@ -56,7 +57,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
           self.neural_stopping = OptimalStoppingOptimization(
             self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
             nb_iters=self.nb_epochs,eps = 0.001)    
-    logger.debug(f"step given by {step}")
+    #logger.debug(f"step given by {step}")
     if self.use_path:
       # shape [paths, stocks, dates up to now]
       stock_values = np.flip(stock_values, axis=2)
@@ -73,6 +74,12 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
       discounted_next_values[:self.split])
     inputs = stock_values
     stopping_rule = self.neural_stopping.evaluate_network(inputs)
+    S = np.reshape([1,2,3,4,5,6],(6,1))
+    try: 
+      logger.debug(np.round(self.neural_stopping.evaluate_network(S)))
+    except Exception:
+      print(traceback.format_exc())
+      
     return stopping_rule
 
 
@@ -101,7 +108,7 @@ class OptimalStoppingOptimization(object):
     discounted_next_values = torch.from_numpy(discounted_next_values).double()
     immediate_exercise_value = torch.from_numpy(immediate_exercise_value).double()
     X_inputs = torch.from_numpy(stock_values).double()
-    logger.debug("debug train_network")
+    #logger.debug("debug train_network")
     self.network.train(True)
     ones = torch.ones(len(discounted_next_values))
     for i in range(self.nb_iters):
@@ -111,23 +118,24 @@ class OptimalStoppingOptimization(object):
 
         optimizer.zero_grad()
         with torch.set_grad_enabled(True):
-          outputs = self.network(X_inputs[batch]).reshape(-1)
-          values = (immediate_exercise_value[batch].reshape(-1) * outputs +
+          outputs = self.network(X_inputs[batch])
+          values = (immediate_exercise_value[batch] * outputs +
                     discounted_next_values[batch] * (ones[batch] - outputs))
           loss = self._Loss(values)
           loss.backward()
           optimizer.step()
-      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networks2/phase_{step}")
+      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networks3/phase_{step}")
       os.makedirs(fpath, exist_ok=True)
       tmp_path = fpath + f"/model_epoch_{i}.pt"
-      logger.debug(f"loss: {loss}")
+      #logger.debug(f"loss: {loss}")
       torch.save({
                   'epoch': i,
                   'model_state_dict': self.network.state_dict(),
                   'optimizer_state_dict': optimizer.state_dict(),
                   'loss': loss,
                   }, tmp_path)
-      logger.debug("Hello")
+      #logger.debug("Hello")
+      
     
 
   def log_train_network(self, stock_values, immediate_exercise_value,
