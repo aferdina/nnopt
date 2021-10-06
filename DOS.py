@@ -124,7 +124,7 @@ class OptimalStoppingOptimization(object):
           loss = self._Loss(values)
           loss.backward()
           optimizer.step()
-      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networks3/phase_{step}")
+      fpath = os.path.join(os.path.dirname(__file__),f"../output/neural_networkscopy4/phase_{step}")
       os.makedirs(fpath, exist_ok=True)
       tmp_path = fpath + f"/model_epoch_{i}.pt"
       #logger.debug(f"loss: {loss}")

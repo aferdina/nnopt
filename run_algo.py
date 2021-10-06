@@ -171,7 +171,7 @@ def _run_algo(
         logger.debug("in algo")
         print(algo, nb_paths, '... ', end="")
         payoff_ = _PAYOFFS[payoff](strike)
-        stock_model_ = _STOCK_MODELS[stock_model](values =[1,2,3,4,5,6],prob=[0.1,0.1,0.1,0.4,0.2,0.1],nb_stocks=nb_stocks,
+        stock_model_ = _STOCK_MODELS[stock_model](values =[1,2,3,4,5,6],prob=[0.167,0.166,0.167,0.166,0.167,0.167],nb_stocks=nb_stocks,
             nb_paths=nb_paths, nb_dates=nb_dates)
         if algo in ['DOS']:
             logger.debug("try pricer")
