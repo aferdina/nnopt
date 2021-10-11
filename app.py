@@ -70,20 +70,18 @@ def update_graph_scatter(x):
     model.load_state_dict(checkpoint['model_state_dict'])
     stock_values_test = np.reshape([1,2,3,4,5,6],(6,1))
     input_test = torch.from_numpy(stock_values_test).double()
-    stock_values = np.linspace(0,6,num=50)
+    stock_values = np.linspace(1,6,num=50)
     stock_values = np.reshape(stock_values,(50,1))
     input = torch.from_numpy(stock_values)
     input = input.double()
     model.train(False)
     model.double()
     out_data = model(input)
-    #logger.debug(f"list of q values{np.round(model(input_test).detach().numpy().flatten().tolist())}")
     loss = checkpoint['loss']
-    #logger.debug(f"true stopping times {corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten()}")
     if plot_nn.epoch ==28:   
-        logger.debug(f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten())}")
+        logger.debug(f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step,:].flatten())}")
         logger.debug(f"approx. qs{np.round(model(input_test).detach().numpy().flatten())}")
-        corr_stopp.mistakes += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten())-np.round(model(input_test).detach().numpy().flatten())))
+        corr_stopp.mistakes += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step,:].flatten())-np.round(model(input_test).detach().numpy().flatten())))
 
     
     reward_figure1 = go.Figure(
@@ -104,11 +102,10 @@ def update_graph_scatter(x):
     model.double()
     out_data2 = model(input)
     loss2 = checkpoint2['loss']
-    #logger.debug(f"list of q values copied {np.round(mod   el(input_test).detach().numpy().flatten().tolist())}")
     if plot_nn.epoch ==28:
-        logger.debug(f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:].flatten())}")
+        logger.debug(f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step,:].flatten())}")
         logger.debug(f"approx. qs copy{np.round(model(input_test).detach().numpy().flatten())}")
-        corr_stopp.mistakes2 += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step+1,:][0])-np.round(model(input_test).detach().numpy().flatten())))
+        corr_stopp.mistakes2 += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step,:][0])-np.round(model(input_test).detach().numpy().flatten())))
 
     
     reward_figure2 = go.Figure(
@@ -126,5 +123,5 @@ def update_graph_scatter(x):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, port=8091)
+    app.run_server(debug=True, port=8092)
  

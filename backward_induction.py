@@ -95,6 +95,8 @@ class AmericanOptionPricer:
     stock_paths = self.model.generate_paths()
     logger.debug(f"paths are {stock_paths.shape}")
     self.split = int(len(stock_paths)/2)
+    emp_qvalues = self.model.get_emp_qvalues(stock_paths[self.split:,:,:])
+    emp_stopping = self.model.get_emp_stopping_rule(stock_paths[self.split:,:,:])
     logger.debug(f"split is {self.split}")
     print("time path gen: {}".format(time.time()-t1), end=" ")
     step = 1

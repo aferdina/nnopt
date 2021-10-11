@@ -1,1 +1,1 @@
-ize=1,nb_iters=10,eps = 0.001) 
+get_emp
