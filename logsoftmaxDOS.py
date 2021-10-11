@@ -73,10 +73,10 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
       immediate_exercise_values.reshape(-1, 1)[:self.split],
       discounted_next_values[:self.split])
     inputs = stock_values
-    stopping_rule = self.neural_stopping.evaluate_network(inputs)
+    stopping_rule = self.neural_stopping.evaluate_network(inputs)[:,0]
     S = np.reshape([1,2,3,4,5,6],(6,1))
     try: 
-      logger.debug(np.round(self.neural_stopping.evaluate_network(S)))
+      logger.debug(np.round(self.neural_stopping.evaluate_network(S)[:,0]))
     except Exception:
       print(traceback.format_exc())
       
@@ -95,7 +95,7 @@ class OptimalStoppingOptimization(object):
     self.nb_paths = nb_paths
     self.nb_iters = nb_iters
     self.batch_size = batch_size
-    self.network = networks.NetworkDOS(
+    self.network = networks.NetworksoftlogDOS(
       self.nb_stocks, hidden_size=hidden_size).double()
     self.network.apply(init_weights)  
 
@@ -108,7 +108,7 @@ class OptimalStoppingOptimization(object):
     discounted_next_values = torch.from_numpy(discounted_next_values).double()
     immediate_exercise_value = torch.from_numpy(immediate_exercise_value).double()
     X_inputs = torch.from_numpy(stock_values).double()
-    #logger.debug("debug train_network")
+    logger.debug("debug train_network")
     self.network.train(True)
     ones = torch.ones(len(discounted_next_values))
     for i in range(self.nb_iters):
@@ -119,8 +119,8 @@ class OptimalStoppingOptimization(object):
         optimizer.zero_grad()
         with torch.set_grad_enabled(True):
           outputs = self.network(X_inputs[batch])
-          values = (immediate_exercise_value[batch] * outputs +
-                    discounted_next_values[batch] * (ones[batch] - outputs))
+          values = (immediate_exercise_value[batch] * outputs[:,0] +
+                    discounted_next_values[batch] * outputs[:,1])
           loss = self._Loss(values)
           loss.backward()
           optimizer.step()
