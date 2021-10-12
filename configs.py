@@ -23,15 +23,15 @@ class _DefaultConfig:
     payoffs: Iterable[str] = ('MaxCall',)
     hidden_size: Iterable[int] = (4,)
     hidden_size2: Iterable[int] = (4,)
-    nb_epochs: Iterable[int] = (30,)
+    nb_epochs: Iterable[int] = (60,)
     gamma: Iterable[float] = (1.,)
     step_size: Iterable[int] = (50,)
     eps: Iterable[float] = (0.001, )
     lr: Iterable[float] = (0.01,)
-    copy: Iterable[bool] = (True,)
+    copy: Iterable[bool] = (False,)
     train_ITM_only: Iterable[bool] = (True,)
     use_path: Iterable[bool] = (False,)
-    storage_loc: Iterable[str] = ("neural_networks4_copy",)
+    storage_loc: Iterable[str] = ("neural_networks4",)
     representations: Iterable[str] = ('TablePriceDuration',)
     # When adding a filter here, also add to filtering.py.
 

@@ -33,9 +33,10 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
     """
 
     def __init__(self, model, payoff, nb_epochs=20, nb_batches=None,
-                 hidden_size=10, use_path=False, eps=0.001, copy=True, values = [1,2,3,4,5,6], storage_loc="neural_networks_4"):
+                 hidden_size=10, use_path=False, eps=0.001, copy=True, values=[1, 2, 3, 4, 5, 6], storage_loc="neural_networks_4"):
         del nb_batches
-        super().__init__(model, payoff, use_path=use_path, copy= copy, values= values, storage_loc=storage_loc)
+        super().__init__(model, payoff, use_path=use_path,
+                         copy=copy, values=values, storage_loc=storage_loc)
         self.hidden_size = hidden_size
         self.eps = eps
         self.storage_loc = storage_loc
@@ -47,7 +48,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         if self.copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-                nb_iters=self.nb_epochs, eps=0.001, storage_loc= self.storage_loc)
+                nb_iters=self.nb_epochs, eps=0.001, storage_loc=self.storage_loc)
 
     def stop(self, step, stock_values, immediate_exercise_values,
              discounted_next_values, copy=True, h=None, new_init=False):
@@ -121,8 +122,8 @@ class OptimalStoppingOptimization(object):
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     outputs = self.network(X_inputs[batch])
-                    values = (immediate_exercise_value[batch] * outputs[:,0].reshape(-1) +
-                              discounted_next_values[batch] * (ones[batch] - outputs[:,1].reshape(-1)))
+                    values = (immediate_exercise_value[batch] * outputs[:, 0].reshape(-1) +
+                              discounted_next_values[batch] * outputs[:, 1].reshape(-1))
                     loss = self._Loss(values)
                     loss.backward()
                     optimizer.step()
@@ -136,7 +137,6 @@ class OptimalStoppingOptimization(object):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss,
             }, tmp_path)
-            
 
     def log_train_network(self, stock_values, immediate_exercise_value,
                           discounted_next_values):
@@ -225,5 +225,5 @@ class OptimalStoppingOptimization(object):
     def evaluate_network(self, X_inputs):
         self.network.train(False)
         X_inputs = torch.from_numpy(X_inputs).double()
-        outputs = self.network(X_inputs)[:,0]
-        return outputs.view(len(X_inputs)).detach().numpy()
+        outputs = self.network(X_inputs)[:, 0]
+        return np.exp(outputs.view(len(X_inputs)).detach().numpy())

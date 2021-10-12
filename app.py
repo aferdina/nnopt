@@ -10,25 +10,25 @@ import sys
 import pandas as pd
 import numpy as np
 from torch._C import Graph
+from networks import NetworklogDOS
 import plot_nn
 #import dash_cytoscape as cyto
 #import networkx as nx
 import plotly.graph_objects as go
-from networks import NetworkDOS
-from networks import NetworkeasyDOS
-from networks import NetworksoftlogDOS
+
 import torch
 import corr_stopp
+import app_config
 
 emp_qvalues1 = pd.read_csv(
-    "../output/neural_networks4_copy/emp_qvalues.csv")
+    f"../output/{app_config.PATH_ONE}/emp_qvalues.csv")
 emp_steps_qvalues1 = pd.read_csv(
-    "../output/neural_networks4_copy/emp_step_qvalues.csv")
+    f"../output/{app_config.PATH_ONE}/emp_step_qvalues.csv")
 
 emp_qvalues2 = pd.read_csv(
-    "../output/neural_networks4/emp_qvalues.csv")
+    f"../output/{app_config.PATH_TWO}/emp_qvalues.csv")
 emp_steps_qvalues2 = pd.read_csv(
-    "../output/neural_networks4/emp_step_qvalues.csv")
+    f"../output/{app_config.PATH_TWO}/emp_step_qvalues.csv")
 # print(networkgraph)
 # For scripts
 logger.remove()
@@ -75,13 +75,13 @@ app.layout = html.Div(
     Input("interval-component", "n_intervals"),
 )
 def update_graph_scatter(x):
-    if plot_nn.epoch == 29:
+    if plot_nn.epoch == app_config.NB_EPOCHS:
         plot_nn.epoch = 0
         plot_nn.step += 1
     logger.trace("Play action.")
-    model = NetworkDOS(nb_stocks=1, hidden_size=4)
+    model = app_config.network
     # generate non copied case
-    fpath = f"../output/neural_networks4/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
+    fpath = f"../output/{app_config.PATH_ONE}/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
     checkpoint = torch.load(fpath)
     model.load_state_dict(checkpoint['model_state_dict'])
     stock_values_test = np.reshape([1, 2, 3, 4, 5, 6], (6, 1))
@@ -92,20 +92,27 @@ def update_graph_scatter(x):
     input = input.double()
     model.train(False)
     model.double()
-    out_data = model(input)
+    if app_config.LOG_MODEL_TWO_OUT:
+        out_data = np.exp(model(input)[:, 0].detach().numpy().flatten())
+        out_test_data = np.round(np.exp(model(input_test)[:,0].detach().numpy().flatten()))
+    else:
+        out_data = model(input).detach().numpy().flatten()
+        out_test_data = np.round(model(input_test).detach().numpy().flatten())
+    logger.debug(out_data)
+    logger.debug(out_test_data)
     loss = checkpoint['loss']
-    if plot_nn.epoch == 28:
+    if plot_nn.epoch == app_config.NB_EPOCHS-1:
         logger.debug(
             f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step,:].flatten())}")
         logger.debug(
             f"approx. qs{np.round(model(input_test).detach().numpy().flatten())}")
         corr_stopp.mistakes += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step, :].flatten(
-        ))-np.round(model(input_test).detach().numpy().flatten())))
+        ))-out_test_data))
 
     reward_figure1 = go.Figure(
         go.Scatter(
             x=list(np.linspace(1, 6, 50)),
-            y=list(out_data.detach().numpy().flatten()),
+            y=list(out_data),
         )
     )
 
@@ -113,25 +120,32 @@ def update_graph_scatter(x):
     text1 = f"step in the game: {plot_nn.step} \n learning epoch: {plot_nn.epoch} \n loss: {loss} \n number of mistakes {corr_stopp.mistakes}"
 
     # generate copied model
-    fpath2 = f"../output/neural_networks4_copy/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
+    fpath2 = f"../output/{app_config.PATH_TWO}/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
     checkpoint2 = torch.load(fpath2)
     model.load_state_dict(checkpoint2['model_state_dict'])
     model.train(False)
     model.double()
-    out_data2 = model(input)
+    if app_config.LOG_MODEL_TWO_OUT:
+        out_data2 = np.exp(model(input)[:, 0].detach().numpy().flatten())
+        out_test_data2 = np.round(np.exp(model(input_test)[:,0].detach().numpy().flatten()))
+    else:
+        out_data2 = model(input).detach().numpy().flatten()
+        out_test_data2 = np.round(model(input_test).detach().numpy().flatten())
+    logger.debug(out_data)
+    logger.debug(out_test_data)
     loss2 = checkpoint2['loss']
-    if plot_nn.epoch == 28:
+    if plot_nn.epoch == app_config.NB_EPOCHS-1:
         logger.debug(
             f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step,:].flatten())}")
         logger.debug(
             f"approx. qs copy{np.round(model(input_test).detach().numpy().flatten())}")
-        corr_stopp.mistakes2 += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step, :][0])-np.round(
-            model(input_test).detach().numpy().flatten())))
+        corr_stopp.mistakes2 += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step, :].flatten(
+        ))-out_test_data2))
 
     reward_figure2 = go.Figure(
         go.Scatter(
             x=list(np.linspace(1, 6, 50)),
-            y=list(out_data2.detach().numpy().flatten()),
+            y=list(out_data2),
         )
     )
 
