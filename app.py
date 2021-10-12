@@ -21,14 +21,14 @@ import torch
 import corr_stopp
 
 emp_qvalues1 = pd.read_csv(
-    "/Users/andreferdinand/Desktop/Coding2/output/neural_networks4_copy/emp_qvalues.csv")
+    "../output/neural_networks4_copy/emp_qvalues.csv")
 emp_steps_qvalues1 = pd.read_csv(
-    "/Users/andreferdinand/Desktop/Coding2/output/neural_networks4_copy/emp_step_qvalues.csv")
+    "../output/neural_networks4_copy/emp_step_qvalues.csv")
 
 emp_qvalues2 = pd.read_csv(
-    "/Users/andreferdinand/Desktop/Coding2/output/neural_networks4/emp_qvalues.csv")
+    "../output/neural_networks4/emp_qvalues.csv")
 emp_steps_qvalues2 = pd.read_csv(
-    "/Users/andreferdinand/Desktop/Coding2/output/neural_networks4/emp_step_qvalues.csv")
+    "../output/neural_networks4/emp_step_qvalues.csv")
 # print(networkgraph)
 # For scripts
 logger.remove()
