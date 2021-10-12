@@ -105,7 +105,7 @@ class AmericanOptionPricer:
     emp_qvalues = self.model.get_emp_qvalues(stock_paths[self.split:,:,:])
     emp_stopping = self.model.get_emp_stopping_rule(stock_paths[self.split:,:,:])
     logger.debug("stocks are generated")
-    fpath = f'/Users/andreferdinand/Desktop/Coding2/output/{self.storage_loc}/'
+    fpath = f'../output/{self.storage_loc}/'
     os.makedirs(fpath, exist_ok=True)
     tmp_fpath_emp_q = fpath + 'emp_qvalues.csv'
     tmp_fpath_emp_stopp = fpath + "emp_stopp.csv"
@@ -121,12 +121,13 @@ class AmericanOptionPricer:
     for date in range(stock_paths.shape[2] - 2, 0, -1):
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])
 
-      #empirical Q values
+      #empirical Q values for trainingsample
       logger.debug(f"empirical Q vaules:")
       liste = []
       for i in self.values:
-        which2 = (immediate_exercise_value == i)
-        liste.append(np.mean(values[which2]))
+        which2 = (immediate_exercise_value[self.split:] == i)
+        helpi = values[self.split:]
+        liste.append(np.mean(helpi[which2]))
       emp_step_qvalues = np.concatenate((emp_step_qvalues,np.array(liste).reshape((1,len(self.values)))),axis=0)
       logger.debug(emp_step_qvalues)
 
