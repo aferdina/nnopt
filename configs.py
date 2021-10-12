@@ -13,7 +13,7 @@ PricePerNbPaths = FigureType("PricePerNbPaths")
 
 @dataclass
 class _DefaultConfig:
-    algos: Iterable[str] = ("logsoftDOS",) #("DOS",)  
+    algos: Iterable[str] = ("DOS",)  #("logsoftDOS",) 
     nb_dates: Iterable[int] = (20,)
     stock_models: Iterable[str] = ('dice_model',)
     strikes: Iterable[int] = (0,)

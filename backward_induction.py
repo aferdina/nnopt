@@ -121,11 +121,11 @@ class AmericanOptionPricer:
     for date in range(stock_paths.shape[2] - 2, 0, -1):
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])
 
-      #empirical Q values
+      #empirical Q values for trainingsample
       logger.debug(f"empirical Q vaules:")
       liste = []
       for i in self.values:
-        which2 = (immediate_exercise_value == i)
+        which2 = (immediate_exercise_value[self.split:,:,:] == i)
         liste.append(np.mean(values[which2]))
       emp_step_qvalues = np.concatenate((emp_step_qvalues,np.array(liste).reshape((1,len(self.values)))),axis=0)
       logger.debug(emp_step_qvalues)

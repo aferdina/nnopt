@@ -86,7 +86,10 @@ class Model_dice:
                     # TODO: backwardind.
                     qvalue = max(np.mean(sample[sample[:, 0, i-1]==s,0,i]),s)
                     liste.append(qvalue)
-                    sample[sample[:, 0, i-1]==s,0,i-1] = np.maximum(np.zeros_like(sample[sample[:, 0, i-1]==s,0,i]) * qvalue,sample[sample[:, 0, i-1]==s,0,i-1])
+                    #sample[sample[:, 0, i-1]==s,0,i-1] = np.maximum(np.zeros_like(sample[sample[:, 0, i-1]==s,0,i]) * qvalue,sample[sample[:, 0, i-1]==s,0,i-1]) 
+                    # der Teil sample[sample[:, 0, i-1]==s,0,i-1] ist immer s, also ist das das selbe maximum das du oben schon gebildet hast
+                    sample[sample[:, 0, i-1]==s,0,i-1] = np.zeros_like(sample[sample[:, 0, i-1]==s,0,i-1]) * qvalue
+
     
               result = np.concatenate((result, np.array(liste).reshape((1,6))),axis=0)
           return result
