@@ -20,5 +20,7 @@ print(pay2(data))
 
 
 if __name__ == "__main__":
-    for i in range(4,0,-1):
-        print(i)
+    A = np.random.randint(0,2,10)
+    bool = A==0
+    bool[:2] = False
+    print(bool)

@@ -118,18 +118,24 @@ class AmericanOptionPricer:
     immediate_exercise_value = self.payoff.eval(stock_paths[:, :, -1])
     values = immediate_exercise_value
     emp_step_qvalues = np.asmatrix(self.values)
+    logger.debug(f"shape is {stock_paths.shape}")
     for date in range(stock_paths.shape[2] - 2, 0, -1):
+      logger.debug(f"date is {date}")
+      logger.debug(f"paths in perios {date} are {stock_paths[:, :, date].reshape(-1)}")
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])
-
       #empirical Q values for trainingsample
       logger.debug(f"empirical Q vaules:")
       liste = []
       for i in self.values:
-        which2 = (immediate_exercise_value[self.split:] == i)
-        helpi = values[self.split:]
-        liste.append(np.mean(helpi[which2]))
+            #logger.debug(f"immed exercise is {immediate_exercise_value}")
+            which2 = (immediate_exercise_value == i)
+            which2[:self.split] = False
+            #logger.debug(f"shape is {values.shape}")
+            #logger.debug(f"which2 is {which2}")
+            liste.append(np.mean(values[which2]))
+      #logger.debug(f"liste ist  {liste}")
       emp_step_qvalues = np.concatenate((emp_step_qvalues,np.array(liste).reshape((1,len(self.values)))),axis=0)
-      logger.debug(emp_step_qvalues)
+      #logger.debug(emp_step_qvalues)
 
 
       if self.use_rnn:
