@@ -12,12 +12,14 @@ import numpy as np
 import time
 from loguru import logger
 from numpy.lib.function_base import copy
+import sys
+import os
 
 class AmericanOptionPricer:
   """Computes the price of an American Option using backward recusrion.
   """
   def __init__(self, model, payoff,use_rnn=False, train_ITM_only=True,
-               use_path=False, copy=True):
+               use_path=False, copy=True, values=[1,2,3,4,5,6], storage_loc = "/neural_networks_4"):
 
     #class model: The stochastic process model of the stock (e.g. Black Scholes).
     self.model = model
@@ -36,6 +38,12 @@ class AmericanOptionPricer:
 
     #bool: copy weights or not
     self.copy = copy
+
+    #list: possible values in dice game 
+    self.values = values
+
+    #str: place where information are stored
+    self.storage_loc = storage_loc
 
 
   def calculate_continuation_value(self):
@@ -91,33 +99,36 @@ class AmericanOptionPricer:
     """
     logger.debug("start pricing")
     t1 = time.time() 
-    #logger.debug("gggggg")
     stock_paths = self.model.generate_paths()
-    logger.debug(f"paths are {stock_paths.shape}")
+    print("time path gen: {}".format(time.time()-t1), end=" ")
     self.split = int(len(stock_paths)/2)
     emp_qvalues = self.model.get_emp_qvalues(stock_paths[self.split:,:,:])
     emp_stopping = self.model.get_emp_stopping_rule(stock_paths[self.split:,:,:])
-    logger.debug(f"split is {self.split}")
-    print("time path gen: {}".format(time.time()-t1), end=" ")
+    logger.debug("stocks are generated")
+    fpath = f'/Users/andreferdinand/Desktop/Coding2/output/{self.storage_loc}/'
+    os.makedirs(fpath, exist_ok=True)
+    tmp_fpath_emp_q = fpath + 'emp_qvalues.csv'
+    tmp_fpath_emp_stopp = fpath + "emp_stopp.csv"
+    np.savetxt(tmp_fpath_emp_q, emp_qvalues, fmt='%1.4f',delimiter=",")
+    np.savetxt(tmp_fpath_emp_stopp, emp_stopping, fmt='%1.4f',delimiter=",")
     step = 1
     if self.use_rnn:
       hs = self.compute_hs(stock_paths)
     disc_factor = 1
     immediate_exercise_value = self.payoff.eval(stock_paths[:, :, -1])
-    #print(np.shape(stock_paths[:,:,-1])) -->(200,1)
-    #print(np.shape(immediate_exercise_value)) -->(200,)
-    #logger.debug(f"immmer immer")
     values = immediate_exercise_value
+    emp_step_qvalues = np.asmatrix(self.values)
     for date in range(stock_paths.shape[2] - 2, 0, -1):
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])
 
       #empirical Q values
       logger.debug(f"empirical Q vaules:")
-      Q_emp = np.empty(shape=(6,))
-      for i in [1,2,3,4,5,6]:
+      liste = []
+      for i in self.values:
         which2 = (immediate_exercise_value == i)
-        Q_emp[i-1] = np.mean(values[which2])
-      logger.debug(Q_emp)
+        liste.append(np.mean(values[which2]))
+      emp_step_qvalues = np.concatenate((emp_step_qvalues,np.array(liste).reshape((1,len(self.values)))),axis=0)
+      logger.debug(emp_step_qvalues)
 
 
       if self.use_rnn:
@@ -129,17 +140,16 @@ class AmericanOptionPricer:
           stock_paths[:, :, :date+1], immediate_exercise_value,
           values * disc_factor, copy=self.copy, h=h)
       else:
-        #logger.debug("starting stopping rule")
         stopping_rule = self.stop(step, 
           stock_paths[:, :, date], immediate_exercise_value,
           values * disc_factor, copy=self.copy, h=h)
-        #ogger.debug("ending stopping rule")
       which = (stopping_rule > 0.5)
-      #print(np.sum(which))
       values[which] = immediate_exercise_value[which]
       values[~which] *= disc_factor
       
       step +=1
     payoff_0 = self.payoff.eval(stock_paths[:, :, 0])[0]
+    tmp_fpath_emp_step_q = fpath + "emp_step_qvalues.csv"
+    np.savetxt(tmp_fpath_emp_step_q, emp_step_qvalues, fmt='%1.4f',delimiter=",")
     # IMPORTANT change to values[self.split:] to get test error
     return max(payoff_0, np.mean(values[:self.split]) * disc_factor)

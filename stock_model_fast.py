@@ -20,12 +20,6 @@ import payoff
 import sys
 NB_JOBS_PATH_GEN = 1
 
-logger.add(
-    sys.stdout,
-    colorize=True,
-    format="<green>{time}</green> | <level>{level} | {message}</level>",
-    level="TRACE",
-)
 
 _PAYOFFS = {
     "MaxPut": payoff.MaxPut,
@@ -86,12 +80,13 @@ class Model_dice:
           S = self.payoff.eval(np.array(self.values).reshape(6,1))
           logger.debug(f"S{S}")
           result = np.asmatrix(S)
-          for i in range(self.nb_dates-1):
+          for i in range(self.nb_dates-1,0, -1):
               liste = []
               for s in S:
-                    qvalue = max(np.mean(sample[sample[:, 0, i-2]==s,0,i-1]),s)
+                    # TODO: backwardind.
+                    qvalue = max(np.mean(sample[sample[:, 0, i-1]==s,0,i]),s)
                     liste.append(qvalue)
-                    sample[sample[:, 0, i-2]==s,0,i-1] = np.maximum(np.zeros_like(sample[sample[:, 0, i-2]==s,0,i-1]) * qvalue,sample[sample[:, 0, i-2]==s,0,i-1])
+                    sample[sample[:, 0, i-1]==s,0,i-1] = np.maximum(np.zeros_like(sample[sample[:, 0, i-1]==s,0,i]) * qvalue,sample[sample[:, 0, i-1]==s,0,i-1])
     
               result = np.concatenate((result, np.array(liste).reshape((1,6))),axis=0)
           return result

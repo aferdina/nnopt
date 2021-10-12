@@ -1,3 +1,6 @@
+### this file is created to test some funcionality of the code
+
+###############################################################
 from stock_model_fast import Model_dice
 import numpy as np
 from payoff import Identity, MaxCall, Mean
@@ -14,4 +17,8 @@ print(data.shape)
 print(pay(data))
 print(pay2(data))
  """
-optim = OptimalStoppingOptimization(1, 10, hidden_size=1 ,nb_iters=10, eps = 0.001) 
+
+
+if __name__ == "__main__":
+    for i in range(4,0,-1):
+        print(i)

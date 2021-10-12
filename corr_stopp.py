@@ -36,7 +36,7 @@ def getstoppingtimes(qvalues, N, S):
 
 N = 30
 S = np.array([1,2,3,4,5,6])
-P = np.array([[0.167,0.166,0.167,0.166,0.167,0.167] for _ in range(6)])
+P = np.array([[0.1, 0.1, 0.1, 0.4, 0.2, 0.1] for _ in range(6)])
 
 qvalues = Q_values(N,P,S)
 #print(qvalues)
