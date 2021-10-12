@@ -4,9 +4,11 @@ Main module to run the algorithms.
 """
 import joblib
 from loguru import logger
+from torch.nn.modules.activation import LogSoftmax
 import stock_model_fast
 import payoff
 import DOS
+import logsoftmaxDOS
 import configs_getter
 import os
 import sys
@@ -63,7 +65,8 @@ _STOCK_MODELS = {
 }
 
 _ALGOS = {
-    "DOS": DOS.DeepOptimalStopping
+    "DOS": DOS.DeepOptimalStopping,
+    "logsoftDOS": logsoftmaxDOS.DeepOptimalStopping
 }
 
 
@@ -160,7 +163,7 @@ def _run_algo(
     payoff_ = _PAYOFFS[payoff](strike)
     stock_model_ = _STOCK_MODELS[stock_model](values=[1, 2, 3, 4, 5, 6], prob=[0.1, 0.1, 0.1, 0.4, 0.2, 0.1], nb_stocks=nb_stocks,
                                               nb_paths=nb_paths, nb_dates=nb_dates, payoff=payoff)
-    if algo in ['DOS']:
+    if algo in ['DOS','logsoftDOS']:
         logger.debug("try pricer")
         try:
             pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,

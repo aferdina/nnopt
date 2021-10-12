@@ -149,7 +149,7 @@ class NetworksoftlogDOS(nn.Module):
     x = self.bn0(x)
     x = self.layer1(x)
     x = self.leakyReLU(x)
-    x = self.bn2(x)
+    x = self.bn1(x)
     x = self.layer2(x)
     x = self.leakyReLU(x)
     x = self.bn2(x)

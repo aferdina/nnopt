@@ -13,7 +13,7 @@ PricePerNbPaths = FigureType("PricePerNbPaths")
 
 @dataclass
 class _DefaultConfig:
-    algos: Iterable[str] = ("DOS",)  # ("logsoftDOS",)
+    algos: Iterable[str] = ("logsoftDOS",) #("DOS",)  
     nb_dates: Iterable[int] = (20,)
     stock_models: Iterable[str] = ('dice_model',)
     strikes: Iterable[int] = (0,)
@@ -28,10 +28,10 @@ class _DefaultConfig:
     step_size: Iterable[int] = (50,)
     eps: Iterable[float] = (0.001, )
     lr: Iterable[float] = (0.01,)
-    copy: Iterable[bool] = (False,)
+    copy: Iterable[bool] = (True,)
     train_ITM_only: Iterable[bool] = (True,)
     use_path: Iterable[bool] = (False,)
-    storage_loc: Iterable[str] = ("neural_networks4",)
+    storage_loc: Iterable[str] = ("neural_networks4_copy",)
     representations: Iterable[str] = ('TablePriceDuration',)
     # When adding a filter here, also add to filtering.py.
 
