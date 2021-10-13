@@ -22,13 +22,24 @@ import app_config
 
 emp_qvalues1 = pd.read_csv(
     f"../output/{app_config.PATH_ONE}/emp_qvalues.csv")
+emp_qvalues1.index = np.arange(1, len(emp_qvalues1) + 1)
+emp_qvalues1.reset_index(inplace=True)
+
 emp_steps_qvalues1 = pd.read_csv(
     f"../output/{app_config.PATH_ONE}/emp_step_qvalues.csv")
+emp_steps_qvalues1.index = np.arange(1, len(emp_steps_qvalues1) + 1)
+emp_steps_qvalues1.reset_index(inplace=True)
 
 emp_qvalues2 = pd.read_csv(
     f"../output/{app_config.PATH_TWO}/emp_qvalues.csv")
+emp_qvalues2.index = np.arange(1, len(emp_qvalues2) + 1)
+emp_qvalues2.reset_index(inplace=True)
+
 emp_steps_qvalues2 = pd.read_csv(
     f"../output/{app_config.PATH_TWO}/emp_step_qvalues.csv")
+emp_steps_qvalues2.index = np.arange(1, len(emp_steps_qvalues2) + 1)
+emp_steps_qvalues2.reset_index(inplace=True)
+
 # print(networkgraph)
 # For scripts
 logger.remove()
@@ -47,15 +58,43 @@ app.layout = html.Div(
             dcc.Graph(id="live-update-graph-scatter", animate=True),
             html.Div(id="step"),
             dash_table.DataTable(id='table1', columns=[
-                                 {"name": i, "id": i} for i in emp_steps_qvalues1.columns], data=emp_steps_qvalues1.to_dict('records'), page_size=5,),
+                                 {"name": i, "id": i} for i in emp_steps_qvalues1.columns], data=emp_steps_qvalues1.to_dict('records'), page_size=5, style_data_conditional=[
+                {
+                    'if': {
+                        'filter_query': '{{index}} = {}'.format(1),
+                    },
+                    'backgroundColor': '#FF4136',
+                    'color': 'black'
+                }, ]),
             dash_table.DataTable(id='table2', columns=[
-                                 {"name": i, "id": i} for i in emp_qvalues1.columns], data=emp_qvalues1.to_dict('records'), page_size=5),
+                                 {"name": i, "id": i} for i in emp_qvalues1.columns], data=emp_qvalues1.to_dict('records'), page_size=5, style_data_conditional=[
+                {
+                    'if': {
+                        'filter_query': '{{index}} = {}'.format(1),
+                    },
+                    'backgroundColor': '#FF4136',
+                    'color': 'black'
+                }, ]),
             dcc.Graph(id="live-update-graph-scatter2", animate=True),
             html.Div(id="step2"),
             dash_table.DataTable(id='table3', columns=[
-                                 {"name": i, "id": i} for i in emp_steps_qvalues2.columns], data=emp_steps_qvalues2.to_dict('records'), page_size=5),
+                                 {"name": i, "id": i} for i in emp_steps_qvalues2.columns], data=emp_steps_qvalues2.to_dict('records'), page_size=5, style_data_conditional=[
+                {
+                    'if': {
+                        'filter_query': '{{index}} = {}'.format(1),
+                    },
+                    'backgroundColor': '#FF4136',
+                    'color': 'black'
+                }, ]),
             dash_table.DataTable(id='table4', columns=[
-                                 {"name": i, "id": i} for i in emp_qvalues2.columns], data=emp_qvalues2.to_dict('records'), page_size=5),
+                                 {"name": i, "id": i} for i in emp_qvalues2.columns], data=emp_qvalues1.to_dict('records'), page_size=5, style_data_conditional=[
+                {
+                    'if': {
+                        'filter_query': '{{index}} = {}'.format(1),
+                    },
+                    'backgroundColor': '#FF4136',
+                    'color': 'black'
+                }, ]),
             dcc.Interval(
                 id="interval-component",
                 interval=1 * 1000,
@@ -71,6 +110,10 @@ app.layout = html.Div(
         Output("step", "children"),
         Output("live-update-graph-scatter2", "figure"),
         Output("step2", "children"),
+        Output("table1","style_data_conditional"),
+        Output("table2","style_data_conditional"),
+        Output("table3","style_data_conditional"),
+        Output("table4","style_data_conditional"),
     ],
     Input("interval-component", "n_intervals"),
 )
@@ -94,7 +137,8 @@ def update_graph_scatter(x):
     model.double()
     if app_config.LOG_MODEL_TWO_OUT:
         out_data = np.exp(model(input)[:, 0].detach().numpy().flatten())
-        out_test_data = np.round(np.exp(model(input_test)[:,0].detach().numpy().flatten()))
+        out_test_data = np.round(
+            np.exp(model(input_test)[:, 0].detach().numpy().flatten()))
     else:
         out_data = model(input).detach().numpy().flatten()
         out_test_data = np.round(model(input_test).detach().numpy().flatten())
@@ -127,7 +171,8 @@ def update_graph_scatter(x):
     model.double()
     if app_config.LOG_MODEL_TWO_OUT:
         out_data2 = np.exp(model(input)[:, 0].detach().numpy().flatten())
-        out_test_data2 = np.round(np.exp(model(input_test)[:,0].detach().numpy().flatten()))
+        out_test_data2 = np.round(
+            np.exp(model(input_test)[:, 0].detach().numpy().flatten()))
     else:
         out_data2 = model(input).detach().numpy().flatten()
         out_test_data2 = np.round(model(input_test).detach().numpy().flatten())
@@ -152,7 +197,15 @@ def update_graph_scatter(x):
     reward_figure2.update_layout(yaxis_range=[0, 1])
     text2 = f"step in the game: {plot_nn.step} \n learning epoch: {plot_nn.epoch} \n loss: {loss2} \n number of mistakes {corr_stopp.mistakes2}"
     plot_nn.epoch += 1
-    return reward_figure1, text1, reward_figure2, text2
+    style_data_conditional=[
+                {
+                    'if': {
+                        'filter_query': '{{index}} = {}'.format(plot_nn.step),
+                    },
+                    'backgroundColor': '#FF4136',
+                    'color': 'black'
+                }, ]
+    return reward_figure1, text1, reward_figure2, text2, style_data_conditional, style_data_conditional, style_data_conditional, style_data_conditional
     # return {'data': traces}
 
 
