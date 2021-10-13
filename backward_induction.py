@@ -14,6 +14,7 @@ from loguru import logger
 import copy
 import sys
 import os
+import copy
 
 
 class AmericanOptionPricer:
@@ -101,6 +102,7 @@ class AmericanOptionPricer:
     logger.debug("start pricing")
     t1 = time.time() 
     stock_paths = self.model.generate_paths()
+    logger.debug(f"stocks are: {stock_paths}")
     print("time path gen: {}".format(time.time()-t1), end=" ")
     self.split = int(len(stock_paths)/2)
     emp_qvalues = self.model.get_emp_qvalues(copy.deepcopy(stock_paths[self.split:,:,:]))
