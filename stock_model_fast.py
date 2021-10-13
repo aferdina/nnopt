@@ -79,12 +79,12 @@ class Model_dice:
     def get_emp_qvalues(self, sample):
           S = self.payoff.eval(np.array(self.values).reshape(6,1))
           result = np.asmatrix(S)
-          for i in range(self.nb_dates-1,0, -1):
+          for i in range(self.nb_dates-1, 0, -1):
               liste = []
               for s in S:
-                    qvalue = max(np.mean(sample[sample[:, 0, i-1]==s,0,i]),s)
+                    qvalue = np.mean(sample[sample[:, 0, i-1]==s,0,i])
                     liste.append(qvalue)
-                    sample[sample[:, 0, i-1]==s,0,i-1] = np.ones_like(sample[sample[:, 0, i-1]==s,0,i-1]) * qvalue
+                    sample[sample[:, 0, i-1]==s,0,i-1] = np.ones_like(sample[sample[:, 0, i-1]==s,0,i-1]) * max(qvalue, s)
               result = np.concatenate((result, np.array(liste).reshape((1,len(self.values)))),axis=0)
           return result
 
@@ -104,5 +104,7 @@ if __name__ == "__main__":
                         nb_paths=nb_paths, nb_dates=nb_dates,nb_stocks=nb_stocks,payoff="Identity")
     paths = modelo.generate_paths()
     modelo.get_emp_qvalues(paths)
+    for i in range(5,1,-1):
+        print(i)
 
 # %%

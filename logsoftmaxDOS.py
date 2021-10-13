@@ -53,7 +53,9 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
     def stop(self, step, stock_values, immediate_exercise_values,
              discounted_next_values, copy=True, h=None, new_init=False):
         """ see base class """
-
+        #logger.debug(f"im_ex_v: {immediate_exercise_values.shape}")
+        #logger.debug(f"dic_next_v: {discounted_next_values.shape}")
+        # they both have shape (200,)!!
         if not copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
@@ -70,7 +72,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
 
         self.neural_stopping.train_network(step,
                                            stock_values[:self.split],
-                                           immediate_exercise_values.reshape(-1, 1)[
+                                           immediate_exercise_values[ #delete .reshape(-1, 1)
                                                :self.split],
                                            discounted_next_values[:self.split])
         inputs = stock_values
@@ -100,13 +102,15 @@ class OptimalStoppingOptimization(object):
         self.network.apply(init_weights)
 
     def _Loss(self, X):
-        return -torch.mean(X)
+        return -torch.mean(X)*2
 
     def train_network(self, step, stock_values, immediate_exercise_value,
                       discounted_next_values):
         optimizer = optim.Adam(self.network.parameters())
-        vec = np.concatenate((discounted_next_values.reshape(len(discounted_next_values),1),np.asmatrix(immediate_exercise_value)),axis=1)
+        # einheitliche reformatierung!
+        vec = np.concatenate((immediate_exercise_value.reshape(len(immediate_exercise_value),1),discounted_next_values.reshape(len(discounted_next_values),1)),axis=1)
         vec = torch.from_numpy(vec).double()
+        #logger.debug(f"vec shape: {vec.shape}") #is torch.size([100,2]) 
         ''' discounted_next_values = torch.from_numpy(
             discounted_next_values).double()
         immediate_exercise_value = torch.from_numpy(
@@ -124,9 +128,13 @@ class OptimalStoppingOptimization(object):
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     outputs = self.network(X_inputs[batch])
-                    values = torch.matmul(vec[batch,:],torch.transpose(outputs,0,1)).reshape(-1)
+                    #outputs = torch.transpose(outputs,0,1)
+                    #logger.debug(f"output shape: {outputs.shape}") #is torch.size([100,2]) 
+                    values = torch.mul(vec[batch,:],outputs)
                     ''' values = (immediate_exercise_value[batch] * outputs[:, 0].reshape(-1) +
                               discounted_next_values[batch] * outputs[:, 1].reshape(-1)) '''
+                    #logger.debug(f"loss values shape is: {values.shape}") # is torch.size([10000])
+                    #logger.debug(values)
                     loss = self._Loss(values)
                     loss.backward()
                     optimizer.step()
