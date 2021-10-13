@@ -18,9 +18,12 @@ print(pay(data))
 print(pay2(data))
  """
 
+def f(x):
+    x = x +2 
+    return x
 
 if __name__ == "__main__":
-    A = np.random.randint(0,2,10)
-    bool = A==0
-    bool[:2] = False
-    print(bool)
+    A = 4
+    b = f(A)
+   
+    print(A)

@@ -11,6 +11,7 @@ TO DO: implement faster way to construct paths of brownian motion DONE
 ******************************************************************
 """
 # %%
+from os import replace
 import numpy as np
 import matplotlib.pyplot as plt
 from loguru import logger
@@ -55,7 +56,6 @@ class Model_dice:
         --------------
         numpy array: shape(nb_paths,length of trajectory) 
           """
-        logger.debug(f"in function")
         return np.random.choice(a=self.values, size=(self.nb_paths, self.nb_stocks, self.nb_dates), p=self.prob)
 
     def plot_paths(self):
@@ -67,7 +67,7 @@ class Model_dice:
         """
 
         data = np.random.choice(a=self.values, size=(
-            self.nb_paths, self.nb_dates), p=self.prob)
+            self.nb_paths, self.nb_dates), p=self.prob,replace=True)
         color = ["b", "g", "r", "c", "m", "y", "k", "w"]
         x = np.arange(0, self.nb_dates)
         for col in range(self.nb_paths):
@@ -78,9 +78,9 @@ class Model_dice:
 
     def get_emp_qvalues(self, sample):
           S = self.payoff.eval(np.array(self.values).reshape(6,1))
-          logger.debug(f"S{S}")
           result = np.asmatrix(S)
           for i in range(self.nb_dates-1,0, -1):
+              logger.debug(f"i is {i}")
               liste = []
               for s in S:
                     # TODO: backwardind.
@@ -88,10 +88,9 @@ class Model_dice:
                     liste.append(qvalue)
                     #sample[sample[:, 0, i-1]==s,0,i-1] = np.maximum(np.zeros_like(sample[sample[:, 0, i-1]==s,0,i]) * qvalue,sample[sample[:, 0, i-1]==s,0,i-1]) 
                     # der Teil sample[sample[:, 0, i-1]==s,0,i-1] ist immer s, also ist das das selbe maximum das du oben schon gebildet hast
-                    sample[sample[:, 0, i-1]==s,0,i-1] = np.zeros_like(sample[sample[:, 0, i-1]==s,0,i-1]) * qvalue
-
-    
-              result = np.concatenate((result, np.array(liste).reshape((1,6))),axis=0)
+                    sample[sample[:, 0, i-1]==s,0,i-1] = np.ones_like(sample[sample[:, 0, i-1]==s,0,i-1]) * qvalue
+              result = np.concatenate((result, np.array(liste).reshape((1,len(self.values)))),axis=0)
+              logger.debug(f"result is {result}")
           return result
 
     def get_emp_stopping_rule(self, sample):
@@ -109,9 +108,6 @@ if __name__ == "__main__":
     modelo = Model_dice(values=values, prob=prob,
                         nb_paths=nb_paths, nb_dates=nb_dates,nb_stocks=nb_stocks,payoff="Identity")
     paths = modelo.generate_paths()
-    emp_q = modelo.get_emp_qvalues(paths)
-    stopping = modelo.get_emp_stopping_rule(paths)
-    print(emp_q)
-    print(stopping)
+    modelo.get_emp_qvalues(paths)
 
 # %%

@@ -11,9 +11,10 @@ TODO: rewrite function in cython
 import numpy as np
 import time
 from loguru import logger
-from numpy.lib.function_base import copy
+import copy
 import sys
 import os
+
 
 class AmericanOptionPricer:
   """Computes the price of an American Option using backward recusrion.
@@ -102,9 +103,8 @@ class AmericanOptionPricer:
     stock_paths = self.model.generate_paths()
     print("time path gen: {}".format(time.time()-t1), end=" ")
     self.split = int(len(stock_paths)/2)
-    emp_qvalues = self.model.get_emp_qvalues(stock_paths[self.split:,:,:])
-    emp_stopping = self.model.get_emp_stopping_rule(stock_paths[self.split:,:,:])
-    logger.debug("stocks are generated")
+    emp_qvalues = self.model.get_emp_qvalues(copy.deepcopy(stock_paths[self.split:,:,:]))
+    emp_stopping = self.model.get_emp_stopping_rule(copy.deepcopy(stock_paths[self.split:,:,:]))
     fpath = f'../output/{self.storage_loc}/'
     os.makedirs(fpath, exist_ok=True)
     tmp_fpath_emp_q = fpath + 'emp_qvalues.csv'
@@ -118,24 +118,16 @@ class AmericanOptionPricer:
     immediate_exercise_value = self.payoff.eval(stock_paths[:, :, -1])
     values = immediate_exercise_value
     emp_step_qvalues = np.asmatrix(self.values)
-    logger.debug(f"shape is {stock_paths.shape}")
     for date in range(stock_paths.shape[2] - 2, 0, -1):
-      logger.debug(f"date is {date}")
-      logger.debug(f"paths in perios {date} are {stock_paths[:, :, date].reshape(-1)}")
       immediate_exercise_value = self.payoff.eval(stock_paths[:, :, date])
       #empirical Q values for trainingsample
       logger.debug(f"empirical Q vaules:")
       liste = []
       for i in self.values:
-            #logger.debug(f"immed exercise is {immediate_exercise_value}")
             which2 = (immediate_exercise_value == i)
             which2[:self.split] = False
-            #logger.debug(f"shape is {values.shape}")
-            #logger.debug(f"which2 is {which2}")
             liste.append(np.mean(values[which2]))
-      #logger.debug(f"liste ist  {liste}")
       emp_step_qvalues = np.concatenate((emp_step_qvalues,np.array(liste).reshape((1,len(self.values)))),axis=0)
-      #logger.debug(emp_step_qvalues)
 
 
       if self.use_rnn:
