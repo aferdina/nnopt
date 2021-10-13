@@ -7,6 +7,7 @@ TODO: rewrite such that new initializazion is needed
 import traceback
 from matplotlib.pyplot import step
 import numpy as np
+from numpy.core.fromnumeric import trace
 import torch
 import torch.optim as optim
 import torch.utils.data as tdata
@@ -14,11 +15,10 @@ from torch.utils.data import distributed
 import os
 from loguru import logger
 import corr_stopp
-
 import backward_induction
 import networks
 import traceback
-
+import sys
 
 def init_weights(m):
     if isinstance(m, torch.nn.Linear):
@@ -105,10 +105,12 @@ class OptimalStoppingOptimization(object):
     def train_network(self, step, stock_values, immediate_exercise_value,
                       discounted_next_values):
         optimizer = optim.Adam(self.network.parameters())
-        discounted_next_values = torch.from_numpy(
+        vec = np.concatenate((discounted_next_values.reshape(len(discounted_next_values),1),np.asmatrix(immediate_exercise_value)),axis=1)
+        vec = torch.from_numpy(vec).double()
+        ''' discounted_next_values = torch.from_numpy(
             discounted_next_values).double()
         immediate_exercise_value = torch.from_numpy(
-            immediate_exercise_value).double()
+            immediate_exercise_value).double() '''
         X_inputs = torch.from_numpy(stock_values).double()
         #logger.debug("debug train_network")
         self.network.train(True)
@@ -122,8 +124,9 @@ class OptimalStoppingOptimization(object):
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     outputs = self.network(X_inputs[batch])
-                    values = (immediate_exercise_value[batch] * outputs[:, 0].reshape(-1) +
-                              discounted_next_values[batch] * outputs[:, 1].reshape(-1))
+                    values = torch.matmul(vec[batch,:],torch.transpose(outputs,0,1)).reshape(-1)
+                    ''' values = (immediate_exercise_value[batch] * outputs[:, 0].reshape(-1) +
+                              discounted_next_values[batch] * outputs[:, 1].reshape(-1)) '''
                     loss = self._Loss(values)
                     loss.backward()
                     optimizer.step()

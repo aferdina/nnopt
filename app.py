@@ -57,6 +57,7 @@ app.layout = html.Div(
         [
             dcc.Graph(id="live-update-graph-scatter", animate=True),
             html.Div(id="step"),
+            html.Div(id="txtfeld"), 
             dash_table.DataTable(id='table1', columns=[
                                  {"name": i, "id": i} for i in emp_steps_qvalues1.columns], data=emp_steps_qvalues1.to_dict('records'), page_size=5, style_data_conditional=[
                 {

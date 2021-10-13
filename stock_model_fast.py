@@ -80,14 +80,12 @@ class Model_dice:
           S = self.payoff.eval(np.array(self.values).reshape(6,1))
           result = np.asmatrix(S)
           for i in range(self.nb_dates-1,0, -1):
-              logger.debug(f"i is {i}")
               liste = []
               for s in S:
                     qvalue = max(np.mean(sample[sample[:, 0, i-1]==s,0,i]),s)
                     liste.append(qvalue)
                     sample[sample[:, 0, i-1]==s,0,i-1] = np.ones_like(sample[sample[:, 0, i-1]==s,0,i-1]) * qvalue
               result = np.concatenate((result, np.array(liste).reshape((1,len(self.values)))),axis=0)
-              logger.debug(f"result is {result}")
           return result
 
     def get_emp_stopping_rule(self, sample):

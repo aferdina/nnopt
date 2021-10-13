@@ -143,17 +143,15 @@ class NetworksoftlogDOS(nn.Module):
     self.layer2 = nn.Linear(H, H)
     self.bn2 = nn.BatchNorm1d(num_features=H)
     self.layer3 = nn.Linear(H, 2)
-    self.bn3 = nn.BatchNorm1d(num_features=1)
+    self.bn3 = nn.BatchNorm1d(num_features=2)
 
   def forward(self, x):
     x = self.bn0(x)
     x = self.layer1(x)
-    x = self.leakyReLU(x)
     x = self.bn1(x)
-    x = self.layer2(x)
-    x = self.leakyReLU(x)
-    x = self.bn2(x)
+    x= self.leakyReLU(x)
     x = self.layer3(x)
+    x = self.bn3(x)
     x = self.logsoft(x)
     return x
 
