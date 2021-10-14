@@ -86,7 +86,7 @@ class Model_dice:
             for s in S:
                 qvalue = np.mean(sample[sample[:, 0, i-1] == s, 0, i])
                 liste.append(qvalue)
-                if s < qvalue:
+                if s <= qvalue:
                     sample[sample[:, 0, i-1] == s, 0, i-1] = sample[sample[:, 0, i-1] == s, 0, i]
             result = np.concatenate(
                 (result, np.array(liste).reshape((1, len(self.values)))), axis=0)

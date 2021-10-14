@@ -9,7 +9,6 @@ import sys
 import pandas as pd
 import numpy as np
 from torch._C import Graph
-import plot_nn
 import plotly.graph_objects as go
 
 import torch
@@ -92,7 +91,7 @@ app.layout = html.Div(
                 }, ]),
             html.Div([html.P('Empirical Q-Values of the trainingsset'), ]),
             dash_table.DataTable(id='table4', columns=[
-                                 {"name": i, "id": i} for i in emp_qvalues2.columns], data=emp_qvalues1.to_dict('records'), page_size=5, style_data_conditional=[
+                                 {"name": i, "id": i} for i in emp_qvalues2.columns], data=emp_qvalues2.to_dict('records'), page_size=5, style_data_conditional=[
                 {
                     'if': {
                         'filter_query': '{{index}} = {}'.format(1),
@@ -126,14 +125,14 @@ app.layout = html.Div(
 )
 def update_graph_scatter(x):
     # if the maximal number of epochs
-    if plot_nn.epoch == app_config.NB_EPOCHS:
-        plot_nn.epoch = 0
-        plot_nn.step += 1
+    if app_config.epoch == app_config.NB_EPOCHS:
+        app_config.epoch = app_config.NB_EPOCHS_START
+        app_config.step += 1
     logger.trace("Play action.")
     # if the maximum number of epochs is reached, switch to the next step of the algorithm
     model = app_config.network
     # import the first model
-    fpath = f"../output/{app_config.PATH_ONE}/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
+    fpath = f"../output/{app_config.PATH_ONE}/phase_{app_config.step}/model_epoch_{app_config.epoch}.pt"
     checkpoint = torch.load(fpath)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.train(False)
@@ -159,12 +158,12 @@ def update_graph_scatter(x):
     # get loss of the algorithm on the trainingssample
     loss = checkpoint['loss']
     # evaluate the algorithm with respect to the theoretical stopping times
-    if plot_nn.epoch == app_config.NB_EPOCHS-1:
+    if app_config.epoch == app_config.NB_EPOCHS-1:
         logger.debug(
-            f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step,:].flatten())}")
+            f"real qs{np.round(corr_stopp.stoppingtimes[app_config.step,:].flatten())}")
         logger.debug(
             f"approx. qs{out_test_data}")
-        corr_stopp.mistakes += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step, :].flatten(
+        corr_stopp.mistakes += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[app_config.step, :].flatten(
         ))-out_test_data))
     # plot the decision function of the algorithm
     reward_figure1 = go.Figure(
@@ -175,9 +174,9 @@ def update_graph_scatter(x):
     )
     reward_figure1.update_layout(yaxis_range=[0, 1])
     # plot information about the game
-    text1 = f"step in the game: {plot_nn.step} \n learning epoch: {plot_nn.epoch} \n loss: {loss} \n number of mistakes {corr_stopp.mistakes}"
+    text1 = f"step in the game: {app_config.step} \n learning epoch: {app_config.epoch} \n loss: {loss} \n number of mistakes {corr_stopp.mistakes}"
     # generate second model identical to the first one
-    fpath2 = f"../output/{app_config.PATH_TWO}/phase_{plot_nn.step}/model_epoch_{plot_nn.epoch}.pt"
+    fpath2 = f"../output/{app_config.PATH_TWO}/phase_{app_config.step}/model_epoch_{app_config.epoch}.pt"
     checkpoint2 = torch.load(fpath2)
     model.load_state_dict(checkpoint2['model_state_dict'])
     model.train(False)
@@ -192,12 +191,12 @@ def update_graph_scatter(x):
     logger.debug(out_data2)
     logger.debug(out_test_data2)
     loss2 = checkpoint2['loss']
-    if plot_nn.epoch == app_config.NB_EPOCHS-1:
+    if app_config.epoch == app_config.NB_EPOCHS-1:
         logger.debug(
-            f"real qs{np.round(corr_stopp.stoppingtimes[plot_nn.step,:].flatten())}")
+            f"real qs{np.round(corr_stopp.stoppingtimes[app_config.step,:].flatten())}")
         logger.debug(
             f"approx. qs copy{out_test_data2}")
-        corr_stopp.mistakes2 += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[plot_nn.step, :].flatten(
+        corr_stopp.mistakes2 += np.sum(np.abs(np.round(corr_stopp.stoppingtimes[app_config.step, :].flatten(
         ))-out_test_data2))
     reward_figure2 = go.Figure(
         go.Scatter(
@@ -206,12 +205,12 @@ def update_graph_scatter(x):
         )
     )
     reward_figure2.update_layout(yaxis_range=[0, 1])
-    text2 = f"step in the game: {plot_nn.step} \n learning epoch: {plot_nn.epoch} \n loss: {loss2} \n number of mistakes {corr_stopp.mistakes2}"
-    plot_nn.epoch += 1
+    text2 = f"step in the game: {app_config.step} \n learning epoch: {app_config.epoch} \n loss: {loss2} \n number of mistakes {corr_stopp.mistakes2}"
+    app_config.epoch += 1
     style_data_conditional = [
         {
             'if': {
-                'filter_query': '{{index}} = {}'.format(plot_nn.step),
+                'filter_query': '{{index}} = {}'.format(app_config.step),
             },
             'backgroundColor': '#FF4136',
             'color': 'black'

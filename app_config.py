@@ -13,4 +13,8 @@ PATH_TWO = "neural_networks4_copy"
 network = networks.NetworksoftlogDOS(nb_stocks=1, hidden_size=4)
 
 # number of epochs, considered in the algorithm
+NB_EPOCHS_START = 50
 NB_EPOCHS = 59
+
+epoch = NB_EPOCHS_START
+step = 1
