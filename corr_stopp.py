@@ -1,5 +1,5 @@
-#Calculating True Q-Values
 import numpy as np
+#Calculating theoretical Q values, given transition matrix, valaues and payoff function
 
 def Q_values(N, P, S):
     """Calculating correct Q values given number of timesteps and a transition matrix
@@ -34,15 +34,15 @@ def getstoppingtimes(qvalues, N, S):
     result = result.astype("float32")
     return result
 
+#TODO: hardcoded parameters, better to refer to config file
 N = 30
 S = np.array([1,2,3,4,5,6])
 P = np.array([[0.1, 0.1, 0.1, 0.4, 0.2, 0.1] for _ in range(6)])
 
+#parmeters for the web application 
 qvalues = Q_values(N,P,S)
-#print(qvalues)
 stoppingtimes = getstoppingtimes(qvalues,N,S)
-#print(stoppingtimes)
 mistakes = 0
 mistakes2 = 0 
-#print(stoppingtimes[1,:])
+
 

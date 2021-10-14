@@ -20,9 +20,7 @@ import socket
 import traceback
 import random
 import time
-#import psutil
 import sys
-# absl needs to be upgraded to >= 0.10.0, otherwise joblib might not work
 from absl import app
 from absl import flags
 import numpy as np

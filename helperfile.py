@@ -1,6 +1,6 @@
 ### this file is created to test some funcionality of the code
 
-###############################################################
+
 from stock_model_fast import Model_dice
 import numpy as np
 from payoff import Identity, MaxCall, Mean

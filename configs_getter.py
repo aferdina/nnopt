@@ -1,7 +1,5 @@
 import inspect
-
 from absl import flags
-
 import configs
 
 FLAGS = flags.FLAGS

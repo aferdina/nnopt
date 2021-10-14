@@ -1,8 +1,6 @@
 """ Computes the American option price using the deep optimal stopping (DOS).
 
-It is the implementation of the deep optimal stopping (DOS) introduced in
-(deep optimal stopping, Becker, Cheridito and Jentzen, 2020).
-TODO: rewrite such that new initializazion is needed
+Using Variance reducing methods from MPD theory
 """
 import traceback
 from matplotlib.pyplot import step
@@ -53,9 +51,6 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
     def stop(self, step, stock_values, immediate_exercise_values,
              discounted_next_values, copy=True, h=None, new_init=False):
         """ see base class """
-        #logger.debug(f"im_ex_v: {immediate_exercise_values.shape}")
-        #logger.debug(f"dic_next_v: {discounted_next_values.shape}")
-        # they both have shape (200,)!!
         if not copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
@@ -72,7 +67,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
 
         self.neural_stopping.train_network(step,
                                            stock_values[:self.split],
-                                           immediate_exercise_values[ #delete .reshape(-1, 1)
+                                           immediate_exercise_values[
                                                :self.split],
                                            discounted_next_values[:self.split])
         inputs = stock_values
@@ -106,35 +101,23 @@ class OptimalStoppingOptimization(object):
 
     def train_network(self, step, stock_values, immediate_exercise_value,
                       discounted_next_values):
+        #initialize optimizer for the game 
         optimizer = optim.Adam(self.network.parameters())
-        # einheitliche reformatierung!
-        vec = np.concatenate((immediate_exercise_value.reshape(len(immediate_exercise_value),1),discounted_next_values.reshape(len(discounted_next_values),1)),axis=1)
-        vec = torch.from_numpy(vec).double()
-        #logger.debug(f"vec shape: {vec.shape}") #is torch.size([100,2]) 
-        ''' discounted_next_values = torch.from_numpy(
-            discounted_next_values).double()
-        immediate_exercise_value = torch.from_numpy(
-            immediate_exercise_value).double() '''
+        #create matrix to use pointwise multiplication to calculate the loss 
+        mat = np.concatenate((immediate_exercise_value.reshape(len(immediate_exercise_value),1),discounted_next_values.reshape(len(discounted_next_values),1)),axis=1)
+        mat = torch.from_numpy(mat).double()
+        #cast input of neural network
         X_inputs = torch.from_numpy(stock_values).double()
-        #logger.debug("debug train_network")
         self.network.train(True)
-        ones = torch.ones(len(discounted_next_values))
         for i in range(self.nb_iters):
             for batch in tdata.BatchSampler(
                     tdata.RandomSampler(
                         range(len(X_inputs)), replacement=False),
                     batch_size=self.batch_size, drop_last=False):
-
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     outputs = self.network(X_inputs[batch])
-                    #outputs = torch.transpose(outputs,0,1)
-                    #logger.debug(f"output shape: {outputs.shape}") #is torch.size([100,2]) 
-                    values = torch.mul(vec[batch,:],outputs)
-                    ''' values = (immediate_exercise_value[batch] * outputs[:, 0].reshape(-1) +
-                              discounted_next_values[batch] * outputs[:, 1].reshape(-1)) '''
-                    #logger.debug(f"loss values shape is: {values.shape}") # is torch.size([10000])
-                    #logger.debug(values)
+                    values = torch.mul(mat[batch,:],outputs)
                     loss = self._Loss(values)
                     loss.backward()
                     optimizer.step()
