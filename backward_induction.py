@@ -113,7 +113,7 @@ class AmericanOptionPricer:
             liste = []
             for i in self.values:
                 which2 = (immediate_exercise_value == i)
-                which2[:self.split] = False
+                which2[self.split:] = False
                 liste.append(np.mean(values[which2]))
             emp_step_qvalues = np.concatenate(
                 (emp_step_qvalues, np.array(liste).reshape((1, len(self.values)))), axis=0)
