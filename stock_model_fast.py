@@ -1,5 +1,6 @@
 
 # %%
+from math import floor
 from os import replace
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,6 +9,7 @@ from numpy.core.defchararray import array
 from numpy.core.fromnumeric import reshape, shape
 import payoff
 import sys
+import copy
 
 # generate path sample of the 'dice-game'
 
@@ -78,16 +80,17 @@ class Model_dice:
         plt.close()
 
     def get_emp_qvalues(self, sample):
-        # TODO: calculating the q value
         S = self.payoff.eval(np.array(self.values).reshape(6, 1))
         result = np.asmatrix(S)
         for i in range(self.nb_dates-1, 0, -1):
             liste = []
+            vec = copy.deepcopy(sample[:, 0, i-1])
             for s in S:
-                qvalue = np.mean(sample[sample[:, 0, i-1] == s, 0, i])
+                qvalue = np.mean(sample[(sample[:, 0, i-1] == s), 0, i])
                 liste.append(qvalue)
                 if s <= qvalue:
-                    sample[sample[:, 0, i-1] == s, 0, i-1] = sample[sample[:, 0, i-1] == s, 0, i]
+                    vec[(sample[:, 0, i-1] == s)] = sample[sample[:, 0, i-1] == s, 0, i]
+            sample[:, 0, i-1] = vec
             result = np.concatenate(
                 (result, np.array(liste).reshape((1, len(self.values)))), axis=0)
         return result
