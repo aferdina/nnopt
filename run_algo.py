@@ -5,11 +5,11 @@ Main module to run the algorithms.
 import joblib
 from loguru import logger
 from torch.nn.modules.activation import LogSoftmax
-import stock_model_fast
-import payoff
-import DOS
-import logsoftmaxDOS
-import configs_getter
+import utils.stock_model_fast as stock_model_fast
+import utils.payoff as payoff
+import algorithms.DOS as DOS
+import algorithms.logsoftmaxDOS as logsoftmaxDOS
+import configs.configs_getter as configs_getter
 import os
 import sys
 import atexit
@@ -45,7 +45,7 @@ _CSV_HEADERS = ['algo', 'model', 'payoff',
                 'hurst', 'nb_stocks',
                 'nb_paths', 'nb_dates', 'nb_epochs', 'hidden_size', 'hidden_size2',
                 'step_size', 'gamma', 'eps', 'lr', "strike",
-                'train_ITM_only', 'copy', 'use_path', "storage_loc", 
+                'train_ITM_only', 'copy', 'use_path', "storage_loc", "start_const",
                 'price', 'duration']
 
 _PAYOFFS = {
@@ -95,7 +95,7 @@ def _run_algos():
             config.nb_epochs, config.hidden_size, config.hidden_size2,
             config.step_size, config.gamma,
             config.eps, config.lr, config.copy,
-            config.train_ITM_only, config.use_path, config.storage_loc))
+            config.train_ITM_only, config.use_path, config.storage_loc, config.start_const))
         # random.shuffle(combinations)
         for params in combinations:
             logger.debug(f"params are {params}")
@@ -130,7 +130,7 @@ def _run_algo(
         nb_stocks, payoff, stock_model, strike,
         nb_epochs, hidden_size=10, hidden_size2=10,
         step_size=1, gamma=0.99, eps=0.001, lr=0.001, copy=True,
-        train_ITM_only=True, use_path=False, storage_loc="neural_networks_4"):
+        train_ITM_only=True, use_path=False, storage_loc="neural_networks_4", start_const=False):
     """This functions runs one algo for option pricing. It is called by _run_algos()
     which is called in main(). Below the inputs are listed which have to be
     specified in the config that is passed to main().
@@ -161,11 +161,19 @@ def _run_algo(
     payoff_ = _PAYOFFS[payoff](strike)
     stock_model_ = _STOCK_MODELS[stock_model](values=[1, 2, 3, 4, 5, 6], prob=[0.1, 0.1, 0.1, 0.4, 0.2, 0.1], nb_stocks=nb_stocks,
                                               nb_paths=nb_paths, nb_dates=nb_dates, payoff=payoff)
-    if algo in ['DOS','logsoftDOS']:
+    if algo in ['DOS', ]:
         logger.debug("try pricer")
         try:
             pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
                                   hidden_size=hidden_size, use_path=use_path, eps=eps, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc)
+        except Exception:
+            print(traceback.format_exc())
+        logger.debug(f"pricer introduced")
+    elif algo in ["logsoftDOS", ]:
+        logger.debug("try pricer")
+        try:
+            pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
+                                  hidden_size=hidden_size, use_path=use_path, eps=eps, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc, start_const=start_const)
         except Exception:
             print(traceback.format_exc())
         logger.debug(f"pricer introduced")

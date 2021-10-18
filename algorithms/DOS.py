@@ -1,6 +1,5 @@
 """ Implementing of the Deep Optimal Stopping Algorithm 
 """
-import traceback
 from matplotlib.pyplot import step
 import numpy as np
 import torch
@@ -8,10 +7,12 @@ import torch.optim as optim
 import torch.utils.data as tdata
 import os
 from loguru import logger
-import backward_induction
-import networks
 import traceback
+import sys
 
+sys.path.insert(0, os.path.dirname("."))
+import utils.networks as networks
+import backward_induction
 # delcare init function to reset the weights of the neural network after a step of the backward recursion
 
 

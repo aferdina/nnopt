@@ -1,6 +1,6 @@
 import inspect
 from absl import flags
-import configs
+import configs.configs as configs
 
 FLAGS = flags.FLAGS
 

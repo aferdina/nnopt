@@ -109,7 +109,6 @@ class AmericanOptionPricer:
             immediate_exercise_value = self.payoff.eval(
                 stock_paths[:, :, date])
             # empirical Q values for trainingsample, given the decisions of the algorithm
-            logger.debug(f"empirical Q vaules:")
             liste = []
             for i in self.values:
                 which2 = (immediate_exercise_value == i)

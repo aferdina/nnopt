@@ -12,6 +12,11 @@ import networks
 import traceback
 import sys
 import numpy as np
+import time 
+from torch.utils.tensorboard import SummaryWriter
+
+# default `log_dir` is "runs" - we'll be more specific here
+
 
 #approximate specific function
 
@@ -34,7 +39,7 @@ class TrainLOG_CONSTANT(object):
     """Train/evaluation of the neural network used for the stopping decision"""
 
     def __init__(self, nb_stocks, hidden_size=4, const_value=5 , support= np.linspace(1,6,endpoint=True,num = 1000), 
-                 batch_size=2000, eps=0.01, storage_loc="weights_log"):
+                 batch_size=2000, eps=0.001, storage_loc="weights_log"):
         self.support = support.reshape((1000,1))
         self.const_value = const_value
         self.eps = eps
@@ -44,6 +49,7 @@ class TrainLOG_CONSTANT(object):
         self.network = networks.NetworksoftlogDOS(
             self.nb_stocks, hidden_size=hidden_size).double()
         self.network.apply(init_weights)
+        self.writer = SummaryWriter(f'runs/wight_const_{int(time.time())}')
 
     def _Loss(self, X):
         return -torch.mean(X)*2
@@ -64,6 +70,7 @@ class TrainLOG_CONSTANT(object):
         X_inputs = torch.from_numpy(self.support).double()
         self.network.train(True)
         step = 0
+        self.writer.add_graph(self.network,X_inputs)
         fpath = os.path.join(os.path.dirname(
                     __file__), f"../output/{self.storage_loc}")
         os.makedirs(fpath, exist_ok=True)
@@ -81,13 +88,20 @@ class TrainLOG_CONSTANT(object):
                     loss.backward()
                     optimizer.step()
                 self.network.train(False)
-                #logger.debug(f"test values are{test_values}")
-                #logger.debug(f"output is {torch.exp(self.network(X_inputs))[:,0]}")
                 lossy = np.mean(torch.abs(torch.exp(self.network(X_inputs))[:,0]-test_values).detach().numpy())
                 logger.debug(f"loss is given by {lossy}")
                 self.network.train(True)
                 logger.debug(f"{lossy<self.eps}")
                 step +=1
+                if step % 500 ==0:
+                    self.writer.add_scalar("Loss/train", loss, step)
+                    self.writer.add_histogram("layer1.bias",self.network.layer1.bias,step)
+                    self.writer.add_histogram("layer1.weight",self.network.layer1.weight,step)
+                    self.writer.add_histogram("layer1.weight.grad",self.network.layer1.weight.grad,step)
+                    self.writer.add_histogram("layer3.bias",self.network.layer3.bias,step)
+                    self.writer.add_histogram("layer3.weight",self.network.layer3.weight,step)
+                    self.writer.add_histogram("layer3.weight.grad",self.network.layer3.weight.grad,step)
+
                 if step % 50 ==0:
                     tmp_path = fpath + f"/model_epoch_{step}.pt"
                     torch.save({
@@ -102,8 +116,10 @@ class TrainLOG_CONSTANT(object):
                         'optimizer_state_dict': optimizer.state_dict(),
                         'loss': loss,
                     }, tmp_path)
+                    self.writer.flush()
+                    self.writer.close()
                     return
-
+                
 if __name__ == "__main__":
     training = TrainLOG_CONSTANT(nb_stocks=1)
     training.get_weigthts()

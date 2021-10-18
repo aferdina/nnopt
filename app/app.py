@@ -10,10 +10,11 @@ import pandas as pd
 import numpy as np
 from torch._C import Graph
 import plotly.graph_objects as go
-
+import os
 import torch
-import corr_stopp
-import app_config
+sys.path.insert(0, os.path.dirname("."))
+import configs.corr_stopp as corr_stopp
+import configs.app_config as app_config
 
 # application, which compares the convergence of two algorithm
 

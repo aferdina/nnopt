@@ -1,1 +1,1 @@
-Hier soll das optimale Stoppproblem fuer das Wuerfelspiel geloest werden
+Optimal Stopping for 'easy-dice-game'

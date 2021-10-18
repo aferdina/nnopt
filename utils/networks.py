@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch 
-from breludef import boundedrelu
+import sys 
+import os
+from utils.breludef import boundedrelu
 
 class NetworkNLSM(nn.Module):
   def __init__(self, nb_stocks, hidden_size=10):

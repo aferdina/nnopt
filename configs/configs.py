@@ -43,13 +43,15 @@ class _DefaultConfig:
     # start learning rate of the algorithm 
     lr: Iterable[float] = (0.01,)
     # bool, whether weights of last period should be used for initializing the neural network in the next step
-    copy: Iterable[bool] = (False,)
+    copy: Iterable[bool] = (True,)
     # bool, whether only paths in the money should be used for training 
     train_ITM_only: Iterable[bool] = (True,)
     # use whole path in non markovian setup
     use_path: Iterable[bool] = (False,)
     # location, where game information should be stored
-    storage_loc: Iterable[str] = ("neural_networks4",)
+    storage_loc: Iterable[str] = ("neural_networks4_copy_const",)
+    # bool, whether neural net is initialized constant at 0.5
+    start_const: Iterable[bool] = (True,)
     representations: Iterable[str] = ('TablePriceDuration',)
     # When adding a filter here, also add to filtering.py.
 
