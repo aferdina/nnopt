@@ -30,7 +30,7 @@ step = 1
 
 LOG_MODEL_TWO_OUT_WEIGHT = True
 
-path = "../output/weights_log"
+path = "./output/weights_log"
 weight_files = [f for f in listdir(path) if isfile(join(path, f))]
 r = re.compile("\d+")
 list_of_numbers = list(map(r.findall, weight_files))
