@@ -8,7 +8,7 @@ import torch.utils.data as tdata
 from torch.utils.data import distributed
 import os
 from loguru import logger
-import networks
+import utils.networks as networks
 import traceback
 import sys
 import numpy as np
@@ -39,7 +39,7 @@ class TrainLOG_CONSTANT(object):
     """Train/evaluation of the neural network used for the stopping decision"""
 
     def __init__(self, nb_stocks, hidden_size=4, const_value=5 , support= np.linspace(1,6,endpoint=True,num = 1000), 
-                 batch_size=2000, eps=0.001, storage_loc="weights_log"):
+                 batch_size=2000, eps=0.001, storage_loc="weights_log_const"):
         self.support = support.reshape((1000,1))
         self.const_value = const_value
         self.eps = eps
@@ -49,7 +49,7 @@ class TrainLOG_CONSTANT(object):
         self.network = networks.NetworksoftlogDOS(
             self.nb_stocks, hidden_size=hidden_size).double()
         self.network.apply(init_weights)
-        self.writer = SummaryWriter(f'runs/wight_const_{int(time.time())}')
+        self.writer = SummaryWriter(f'runs/weight_const_{int(time.time())}')
 
     def _Loss(self, X):
         return -torch.mean(X)*2
@@ -72,7 +72,7 @@ class TrainLOG_CONSTANT(object):
         step = 0
         self.writer.add_graph(self.network,X_inputs)
         fpath = os.path.join(os.path.dirname(
-                    __file__), f"../output/{self.storage_loc}")
+                    __file__), f"./output/{self.storage_loc}")
         os.makedirs(fpath, exist_ok=True)
         logger.debug("running")
         while True:

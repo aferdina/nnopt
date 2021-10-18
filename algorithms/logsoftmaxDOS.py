@@ -99,7 +99,7 @@ class OptimalStoppingOptimization(object):
         if not start_const:
             self.network.apply(init_weights)
         else:
-            fpath = f"../output/weights_log/model_epoch_final.pt"
+            fpath = f"./output/weights_log_const/model_epoch_final.pt"
             checkpoint = torch.load(fpath)
             self.network.load_state_dict(checkpoint['model_state_dict'])
 
@@ -130,7 +130,7 @@ class OptimalStoppingOptimization(object):
                     loss.backward()
                     optimizer.step()
             fpath = os.path.join(os.path.dirname(
-                __file__), f"../output/{self.storage_loc}/phase_{step}")
+                __file__), f"./output/{self.storage_loc}/phase_{step}")
             os.makedirs(fpath, exist_ok=True)
             tmp_path = fpath + f"/model_epoch_{i}.pt"
             torch.save({

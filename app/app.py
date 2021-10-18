@@ -21,22 +21,22 @@ import configs.app_config as app_config
 # create datatable of the empirical q values
 # emp_qvalues are q values from the whole dataset, emp_step_qvalues are the empirical q-values given the decisions of the algorithm
 emp_qvalues1 = pd.read_csv(
-    f"../output/{app_config.PATH_ONE}/emp_qvalues.csv")
+    f"./output/{app_config.PATH_ONE}/emp_qvalues.csv")
 emp_qvalues1.index = np.arange(1, len(emp_qvalues1) + 1)
 emp_qvalues1.reset_index(inplace=True)
 
 emp_steps_qvalues1 = pd.read_csv(
-    f"../output/{app_config.PATH_ONE}/emp_step_qvalues.csv")
+    f"./output/{app_config.PATH_ONE}/emp_step_qvalues.csv")
 emp_steps_qvalues1.index = np.arange(1, len(emp_steps_qvalues1) + 1)
 emp_steps_qvalues1.reset_index(inplace=True)
 
 emp_qvalues2 = pd.read_csv(
-    f"../output/{app_config.PATH_TWO}/emp_qvalues.csv")
+    f"./output/{app_config.PATH_TWO}/emp_qvalues.csv")
 emp_qvalues2.index = np.arange(1, len(emp_qvalues2) + 1)
 emp_qvalues2.reset_index(inplace=True)
 
 emp_steps_qvalues2 = pd.read_csv(
-    f"../output/{app_config.PATH_TWO}/emp_step_qvalues.csv")
+    f"./output/{app_config.PATH_TWO}/emp_step_qvalues.csv")
 emp_steps_qvalues2.index = np.arange(1, len(emp_steps_qvalues2) + 1)
 emp_steps_qvalues2.reset_index(inplace=True)
 
@@ -133,7 +133,7 @@ def update_graph_scatter(x):
     # if the maximum number of epochs is reached, switch to the next step of the algorithm
     model = app_config.network
     # import the first model
-    fpath = f"../output/{app_config.PATH_ONE}/phase_{app_config.step}/model_epoch_{app_config.epoch}.pt"
+    fpath = f"./output/{app_config.PATH_ONE}/phase_{app_config.step}/model_epoch_{app_config.epoch}.pt"
     checkpoint = torch.load(fpath)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.train(False)
@@ -177,7 +177,7 @@ def update_graph_scatter(x):
     # plot information about the game
     text1 = f"step in the game: {app_config.step} \n learning epoch: {app_config.epoch} \n loss: {loss} \n number of mistakes {corr_stopp.mistakes}"
     # generate second model identical to the first one
-    fpath2 = f"../output/{app_config.PATH_TWO}/phase_{app_config.step}/model_epoch_{app_config.epoch}.pt"
+    fpath2 = f"./output/{app_config.PATH_TWO}/phase_{app_config.step}/model_epoch_{app_config.epoch}.pt"
     checkpoint2 = torch.load(fpath2)
     model.load_state_dict(checkpoint2['model_state_dict'])
     model.train(False)

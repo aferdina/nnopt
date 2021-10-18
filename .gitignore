@@ -1,3 +1,5 @@
 *.pyc
 *.pt
 runs
+*.DS_Store
+*.csv

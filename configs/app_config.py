@@ -10,8 +10,8 @@ import itertools
 LOG_MODEL_TWO_OUT = True
 
 # paths, where algorithms are stored
-PATH_ONE = "neural_networks4"
-PATH_TWO = "neural_networks4_copy"
+PATH_ONE = "neural_networks4_copy"
+PATH_TWO = "neural_networks4_copy_const"
 
 # network, of the algorithm
 network = networks.NetworksoftlogDOS(nb_stocks=1, hidden_size=4)
@@ -30,7 +30,7 @@ step = 1
 
 LOG_MODEL_TWO_OUT_WEIGHT = True
 
-path = "/Users/andreferdinand/Desktop/Coding2/output/weights_log"
+path = "../output/weights_log"
 weight_files = [f for f in listdir(path) if isfile(join(path, f))]
 r = re.compile("\d+")
 list_of_numbers = list(map(r.findall, weight_files))
