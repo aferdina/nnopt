@@ -102,13 +102,19 @@ def _run_algos():
             for i in range(config.nb_runs):
                 tmp_file_path = os.path.join(tmp_dirpath, str(tmp_files_idx))
                 tmp_files_idx += 1
-                delayed_jobs.append(joblib.delayed(_run_algo)(
-                    tmp_file_path, *params)
-                )
+                try:
+                    delayed_jobs.append(joblib.delayed(_run_algo)(
+                        tmp_file_path, *params)
+                    )
+                except: 
+                    pass
 
     print(f"Running {len(delayed_jobs)} tasks using "
           f"{FLAGS.nb_jobs}/{NUM_PROCESSORS} CPUs...")
-    joblib.Parallel(n_jobs=NB_JOBS)(delayed_jobs)
+    try:
+        joblib.Parallel(n_jobs=NB_JOBS)(delayed_jobs)
+    except:
+        _run_algo(tmp_file_path,*params)
 
     print(f'Writing results to {fpath}...')
     with open(fpath, "w") as csvfile:
@@ -173,7 +179,7 @@ def _run_algo(
         logger.debug("try pricer")
         try:
             pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
-                                  hidden_size=hidden_size, use_path=use_path, eps=eps, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc, start_const=start_const)
+                                  hidden_size=hidden_size, use_path=use_path, eps=eps, lr=lr, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc, start_const=start_const)
         except Exception:
             print(traceback.format_exc())
         logger.debug(f"pricer introduced")
