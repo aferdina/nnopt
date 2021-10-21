@@ -55,7 +55,7 @@ def update_graph_scatter(x):
     # if the maximum number of epochs is reached, switch to the next step of the algorithm
     model = app_config.network_weight
     # import the first model
-    fpath = f"/Users/andreferdinand/Desktop/Coding2/output/weights_log/model_epoch_{app_config.list_of_numbers_merged[app_config.epoch_weight]}.pt"
+    fpath = f"./output/weights_log_const/model_epoch_{app_config.list_of_numbers_merged[app_config.epoch_weight]}.pt"
     checkpoint = torch.load(fpath)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.train(False)

@@ -130,7 +130,7 @@ class OptimalStoppingOptimization(object):
                     loss.backward()
                     optimizer.step()
             fpath = os.path.join(os.path.dirname(
-                __file__), f"./output/{self.storage_loc}/phase_{step}")
+                __file__), f"../output/{self.storage_loc}/phase_{step}")
             os.makedirs(fpath, exist_ok=True)
             tmp_path = fpath + f"/model_epoch_{i}.pt"
             torch.save({

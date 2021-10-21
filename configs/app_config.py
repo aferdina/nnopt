@@ -3,7 +3,8 @@ import re
 from os import listdir
 from os.path import isfile, join
 import itertools
-
+import os 
+#sys.path.insert(0, os.path.dirname("."))
 # includes the configurations of the web application
 
 # bool, if logmodel (logsoftmax) is used; these functions have two outputs (log(p),log(1-p)) and therefore needed a specific treatment
@@ -30,7 +31,7 @@ step = 1
 
 LOG_MODEL_TWO_OUT_WEIGHT = True
 
-path = "./output/weights_log"
+path = "./output/weights_log_const"
 weight_files = [f for f in listdir(path) if isfile(join(path, f))]
 r = re.compile("\d+")
 list_of_numbers = list(map(r.findall, weight_files))

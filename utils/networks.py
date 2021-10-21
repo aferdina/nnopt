@@ -150,10 +150,9 @@ class NetworksoftlogDOS(nn.Module):
   def forward(self, x):
     x = self.bn0(x)
     x = self.layer1(x)
-    x = self.bn1(x)
     x= self.leakyReLU(x)
+    x = self.bn1(x)
     x = self.layer3(x)
-    x = self.bn3(x)
     x = self.logsoft(x)
     return x
 
