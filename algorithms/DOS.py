@@ -14,7 +14,14 @@ sys.path.insert(0, os.path.dirname("."))
 import utils.networks as networks
 import backward_induction
 # delcare init function to reset the weights of the neural network after a step of the backward recursion
+import functools
+import time
+from torch.utils.tensorboard import SummaryWriter
 
+def rgetattr(obj, attr, *args):
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+    return functools.reduce(_getattr, [obj] + attr.split('.'))
 
 def init_weights(m):
     if isinstance(m, torch.nn.Linear):
@@ -28,7 +35,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
     """
 
     def __init__(self, model, payoff, nb_epochs=20, nb_batches=None,
-                 hidden_size=10, use_path=False, eps=0.001, copy=True, values=[1, 2, 3, 4, 5, 6], storage_loc="neural_networks_4"):
+                 hidden_size=10, use_path=False, eps=0.001, lr = 0.001, copy=True, values=[1, 2, 3, 4, 5, 6], storage_loc="neural_networks_4", start_const = True):
         """init class
 
         Args:
@@ -50,6 +57,8 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         self.eps = eps
         self.storage_loc = storage_loc
         self.nb_epochs = nb_epochs
+        self.start_const = start_const
+        self.lr = lr
         if self.use_path:
             self.state_size = model.nb_stocks * (model.nb_dates+1)
         else:
@@ -58,7 +67,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         if self.copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-                nb_iters=self.nb_epochs, eps=0.001, storage_loc=self.storage_loc)
+                nb_iters=self.nb_epochs, eps=0.001, lr = self.lr, storage_loc=self.storage_loc, start_const= self.start_const)
 
     def stop(self, step, stock_values, immediate_exercise_values,
              discounted_next_values, copy=True, h=None):
@@ -75,11 +84,12 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         Returns:
             numpy.array: array of the form {0,1}^n, where 1 means continue and 0 means stop
         """
+        writer = SummaryWriter(f'runs_dos/{self.storage_loc}_{step}_{int(time.time())}')
         # if the weights are not copied, then a new neural network is initialized at each step in time
         if not copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-                nb_iters=self.nb_epochs, eps=0.001, storage_loc=self.storage_loc)
+                nb_iters=self.nb_epochs, eps=0.001, lr = self.lr, storage_loc=self.storage_loc, start_const= self.start_const)
         # only needed in not markovian case
         if self.use_path:
             # shape [paths, stocks, dates up to now]
@@ -91,7 +101,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
                      self.model.nb_dates + 1 - stock_values.shape[2]))], axis=-1)
             stock_values = stock_values.reshape((stock_values.shape[0], -1))
         # train the neural network on the training sample
-        self.neural_stopping.train_network(step,
+        self.neural_stopping.train_network(step, writer,
                                            stock_values[:self.split],
                                            immediate_exercise_values.reshape(-1, 1)[
                                                :self.split],
@@ -99,6 +109,12 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         # create stopping policy for all paths
         inputs = stock_values
         stopping_rule = self.neural_stopping.evaluate_network(inputs)
+        S = np.reshape([1, 2, 3, 4, 5, 6], (6, 1))
+        try:
+            logger.debug(np.round(self.neural_stopping.evaluate_network(S)))
+        except Exception:
+            print(traceback.format_exc())
+
         return stopping_rule
 
 
@@ -106,7 +122,7 @@ class OptimalStoppingOptimization(object):
     """Train/evaluation of the neural network used for the stopping decision"""
 
     def __init__(self, nb_stocks, nb_paths, hidden_size=10, nb_iters=20,
-                 batch_size=2000, eps=0.001, storage_loc="neural_networks_4"):
+                 batch_size=2000, eps=0.001, lr =0.01, storage_loc="neural_networks_4", start_const = True):
         """Optimization class of the neural net
 
         Args:
@@ -124,14 +140,20 @@ class OptimalStoppingOptimization(object):
         self.nb_iters = nb_iters
         self.storage_loc = storage_loc
         self.batch_size = batch_size
+        self.lr = lr
         self.network = networks.NetworkDOS(
             self.nb_stocks, hidden_size=hidden_size).double()
-        self.network.apply(init_weights)
+        if not start_const:
+            self.network.apply(init_weights)
+        else:
+            fpath = f"./output/weights_const/model_epoch_final.pt"
+            checkpoint = torch.load(fpath)
+            self.network.load_state_dict(checkpoint['model_state_dict'])
 
     def _Loss(self, X):
         return -torch.mean(X)
 
-    def train_network(self, step, stock_values, immediate_exercise_value,
+    def train_network(self, step, writer, stock_values, immediate_exercise_value,
                       discounted_next_values):
         """training of the neural network
 
@@ -142,7 +164,7 @@ class OptimalStoppingOptimization(object):
             discounted_next_values numpy.array): continuation values 
         """
         # initializing the optimzier
-        optimizer = optim.Adam(self.network.parameters())
+        optimizer = optim.Adam(self.network.parameters(), lr = self.lr)
         # prepare data (cast to torch tensor) for the training
         discounted_next_values = torch.from_numpy(
             discounted_next_values).double()
@@ -151,6 +173,8 @@ class OptimalStoppingOptimization(object):
         X_inputs = torch.from_numpy(stock_values).double()
         self.network.train(True)
         ones = torch.ones(len(discounted_next_values))
+        writer.add_graph(self.network, X_inputs)
+        count = 0
         # start with the training
         for i in range(self.nb_iters):
             for batch in tdata.BatchSampler(
@@ -165,6 +189,22 @@ class OptimalStoppingOptimization(object):
                     loss = self._Loss(values)
                     loss.backward()
                     optimizer.step()
+                
+                count += 1
+                if count % 10 == 0:
+                    # add information to tensorboard file
+                    writer.add_scalar("Loss/train", loss, count)
+                    for name, layer in self.network.named_modules():
+                        if isinstance(layer, torch.nn.Linear):
+                            writer.add_histogram(f"{name}.weight", rgetattr(
+                                self.network, f"{name}.weight"), count)
+                            writer.add_histogram(f"{name}.weight.grad", rgetattr(
+                                self.network, f"{name}.weight.grad"), count)
+                            writer.add_histogram(f"{name}.bias", rgetattr(
+                                self.network, f"{name}.bias"), count)
+                            writer.add_histogram(f"{name}.bias.grad", rgetattr(
+                                self.network, f"{name}.bias.grad"), count)
+
             # save the information of the model
             fpath = os.path.join(os.path.dirname(
                 __file__), f"../output/{self.storage_loc}/phase_{step}")

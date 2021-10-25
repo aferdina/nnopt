@@ -171,7 +171,7 @@ def _run_algo(
         logger.debug("try pricer")
         try:
             pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
-                                  hidden_size=hidden_size, use_path=use_path, eps=eps, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc)
+                                  hidden_size=hidden_size, use_path=use_path, eps=eps, lr=lr, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc, start_const = start_const)
         except Exception:
             print(traceback.format_exc())
         logger.debug(f"pricer introduced")

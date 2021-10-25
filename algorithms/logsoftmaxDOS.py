@@ -17,6 +17,15 @@ import backward_induction
 import utils.networks as networks
 import traceback
 import sys
+import functools
+import time
+from torch.utils.tensorboard import SummaryWriter
+
+
+def rgetattr(obj, attr, *args):
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+    return functools.reduce(_getattr, [obj] + attr.split('.'))
 
 
 def init_weights(m):
@@ -54,6 +63,9 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
     def stop(self, step, stock_values, immediate_exercise_values,
              discounted_next_values, copy=True, h=None, new_init=False):
         """ see base class """
+        writer = SummaryWriter(
+                f'runs_log/{self.storage_loc}_{step}_{int(time.time())}')
+       
         if not copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
@@ -68,7 +80,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
                      self.model.nb_dates + 1 - stock_values.shape[2]))], axis=-1)
             stock_values = stock_values.reshape((stock_values.shape[0], -1))
 
-        self.neural_stopping.train_network(step,
+        self.neural_stopping.train_network(step,writer,
                                            stock_values[:self.split],
                                            immediate_exercise_values[
                                                :self.split],
@@ -96,6 +108,7 @@ class OptimalStoppingOptimization(object):
         self.storage_loc = storage_loc
         self.batch_size = batch_size
         self.lr = lr
+        
         self.network = networks.NetworksoftlogDOS(
             self.nb_stocks, hidden_size=hidden_size).double()
         if not start_const:
@@ -108,7 +121,7 @@ class OptimalStoppingOptimization(object):
     def _Loss(self, X):
         return -torch.mean(X)*2
 
-    def train_network(self, step, stock_values, immediate_exercise_value,
+    def train_network(self, step, writer, stock_values, immediate_exercise_value,
                       discounted_next_values):
         # initialize optimizer for the game
         optimizer = optim.Adam(self.network.parameters(), lr = self.lr)
@@ -117,9 +130,12 @@ class OptimalStoppingOptimization(object):
         mat = np.concatenate((immediate_exercise_value.reshape(len(immediate_exercise_value), 1),
                              discounted_next_values.reshape(len(discounted_next_values), 1)), axis=1)
         mat = torch.from_numpy(mat).double()
+        
         # cast input of neural network
         X_inputs = torch.from_numpy(stock_values).double()
         self.network.train(True)
+        count = 0
+        writer.add_graph(self.network,X_inputs)
         for i in range(self.nb_iters):
             for batch in tdata.BatchSampler(
                     tdata.RandomSampler(
@@ -132,6 +148,22 @@ class OptimalStoppingOptimization(object):
                     loss = self._Loss(values)
                     loss.backward()
                     optimizer.step()
+                count +=1
+                if count % 10 == 0:
+                    # add information to tensorboard file
+                    writer.add_scalar("Loss/train", loss, count)
+                    for name, layer in self.network.named_modules():
+                        if isinstance(layer, torch.nn.Linear):
+                            #logger.debug(f'{layer}_{name}')
+                            writer.add_histogram(f"{name}.weight", rgetattr(
+                                self.network, f"{name}.weight"), count)
+                            writer.add_histogram(f"{name}.weight.grad", rgetattr(
+                                self.network, f"{name}.weight.grad"), count)
+                            writer.add_histogram(f"{name}.bias", rgetattr(
+                                self.network, f"{name}.bias"), count)
+                            writer.add_histogram(f"{name}.bias.grad", rgetattr(
+                                self.network, f"{name}.bias.grad"), count)
+
             fpath = os.path.join(os.path.dirname(
                 __file__), f"../output/{self.storage_loc}/phase_{step}")
             os.makedirs(fpath, exist_ok=True)

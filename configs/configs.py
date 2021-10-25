@@ -15,6 +15,7 @@ PricePerNbPaths = FigureType("PricePerNbPaths")
 class _DefaultConfig:
     #algorithm using for function approximation
     algos: Iterable[str] = ("logsoftDOS",) 
+    #algos: Iterable[str] = ("DOS",) 
     # number of dates for exercising the option
     nb_dates: Iterable[int] = (20,)
     # used stock model for creating the path samples
@@ -33,7 +34,7 @@ class _DefaultConfig:
     hidden_size: Iterable[int] = (4,)
     hidden_size2: Iterable[int] = (4,)
     #number of epochs for training the neural network
-    nb_epochs: Iterable[int] = (10,)
+    nb_epochs: Iterable[int] = (60,)
     # discount factor of the game 
     gamma: Iterable[float] = (1.,)
     # parameter which defines how many times the same learning rate should be used
@@ -49,7 +50,7 @@ class _DefaultConfig:
     # use whole path in non markovian setup
     use_path: Iterable[bool] = (False,)
     # location, where game information should be stored
-    storage_loc: Iterable[str] = ("neural_networks4_copy_const",)
+    storage_loc: Iterable[str] = ("neural_networks1_log_copy_const",)
     # bool, whether neural net is initialized constant at 0.5
     start_const: Iterable[bool] = (True,)
     representations: Iterable[str] = ('TablePriceDuration',)

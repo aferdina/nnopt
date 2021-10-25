@@ -35,37 +35,39 @@ def init_weights(m):
         torch.nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
-class TrainLOG_CONSTANT(object):
+class Train_CONSTANT(object):
     """Train/evaluation of the neural network used for the stopping decision"""
 
     def __init__(self, nb_stocks, hidden_size=4, const_value=5 , support= np.linspace(1,6,endpoint=True,num = 1000), 
-                 batch_size=2000, eps=0.001, storage_loc="weights_log_const"):
+                 batch_size=2000, eps=0.01, storage_loc="weights_const"):
         self.support = support.reshape((1000,1))
         self.const_value = const_value
         self.eps = eps
         self.nb_stocks = nb_stocks
         self.storage_loc = storage_loc
         self.batch_size = batch_size
-        self.network = networks.NetworksoftlogDOS(
+        self.network = networks.NetworkDOS(
             self.nb_stocks, hidden_size=hidden_size).double()
         self.network.apply(init_weights)
-        self.writer = SummaryWriter(f'runs/weight_log_const_{int(time.time())}')
+        self.writer = SummaryWriter(f'runs/weight_const_{int(time.time())}')
 
     def _Loss(self, X):
-        return -torch.mean(X)*2
+        return torch.mean(X)
 
     def get_weigthts(self):
         #set up vectors
         logger.debug(f"size im is {self.support.shape}")
-        immediate_exercise_value = np.ones_like(self.support)*self.const_value
-        discounted_next_values = np.ones_like(self.support)*self.const_value
+        #immediate_exercise_value = torch.from_numpy(np.ones_like(self.support)*self.const_value).double()
+        #discounted_next_values = torch.from_numpy(np.ones_like(self.support)*self.const_value).double()
         test_values = torch.from_numpy(np.ones_like(self.support)* 0.5).double()
         #initialize optimizer for the game 
         optimizer = optim.Adam(self.network.parameters())
+
         #create matrix to use pointwise multiplication to calculate the loss 
-        mat = np.concatenate((immediate_exercise_value.reshape(immediate_exercise_value.shape[0],1),discounted_next_values.reshape(len(discounted_next_values),1)),axis=1)
-        logger.debug(f"matrix is {mat}")
-        mat = torch.from_numpy(mat).double()
+        #mat = np.concatenate((immediate_exercise_value.reshape(immediate_exercise_value.shape[0],1),discounted_next_values.reshape(len(discounted_next_values),1)),axis=1)
+        #logger.debug(f"matrix is {mat}")
+        #mat = torch.from_numpy(mat).double()
+        
         #cast input of neural network
         X_inputs = torch.from_numpy(self.support).double()
         self.network.train(True)
@@ -75,6 +77,7 @@ class TrainLOG_CONSTANT(object):
                     __file__), f"./output/{self.storage_loc}")
         os.makedirs(fpath, exist_ok=True)
         logger.debug("running")
+
         while True:
             for batch in tdata.BatchSampler(
                     tdata.RandomSampler(
@@ -83,12 +86,12 @@ class TrainLOG_CONSTANT(object):
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     outputs = self.network(X_inputs[batch])
-                    values = torch.mul(mat[batch,:],outputs)
+                    values = torch.square(outputs-test_values[batch]) #immediate_exercise_value[batch] * outputs + discounted_next_values[batch] *(ones[batch]-outputs)
                     loss = self._Loss(values)
                     loss.backward()
                     optimizer.step()
                 self.network.train(False)
-                lossy = np.mean(torch.abs(torch.exp(self.network(X_inputs))[:,0]-test_values).detach().numpy())
+                lossy = np.mean(torch.abs(self.network(X_inputs)-test_values).detach().numpy())
                 logger.debug(f"loss is given by {lossy}")
                 self.network.train(True)
                 logger.debug(f"{lossy<self.eps}")
@@ -121,5 +124,5 @@ class TrainLOG_CONSTANT(object):
                     return
                 
 if __name__ == "__main__":
-    training = TrainLOG_CONSTANT(nb_stocks=1)
+    training = Train_CONSTANT(nb_stocks=1)
     training.get_weigthts()
