@@ -34,15 +34,15 @@ class _DefaultConfig:
     hidden_size: Iterable[int] = (4,)
     hidden_size2: Iterable[int] = (4,)
     #number of epochs for training the neural network
-    nb_epochs: Iterable[int] = (60,)
+    nb_epochs: Iterable[int] = (10,)
     # discount factor of the game 
     gamma: Iterable[float] = (1.,)
     # parameter which defines how many times the same learning rate should be used
     step_size: Iterable[int] = (50,)
     # tetermination criteria 
-    eps: Iterable[float] = (0.001, )
+    eps: Iterable[float] = (0.001,)
     # start learning rate of the algorithm 
-    lr: Iterable[float] = (0.001,)
+    lr: Iterable[float] = (0.01,)
     # bool, whether weights of last period should be used for initializing the neural network in the next step
     copy: Iterable[bool] = (True,)
     # bool, whether only paths in the money should be used for training 
@@ -50,7 +50,7 @@ class _DefaultConfig:
     # use whole path in non markovian setup
     use_path: Iterable[bool] = (False,)
     # location, where game information should be stored
-    storage_loc: Iterable[str] = ("neural_networks1_log_copy_const",)
+    storage_loc: Iterable[str] = ("neural_networks3_log_copy_const",)
     # bool, whether neural net is initialized constant at 0.5
     start_const: Iterable[bool] = (True,)
     representations: Iterable[str] = ('TablePriceDuration',)

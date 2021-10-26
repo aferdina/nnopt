@@ -4,3 +4,6 @@ runs
 *.DS_Store
 *.csv
 runs_log
+runs_dos
+output
+output_special

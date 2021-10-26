@@ -84,7 +84,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         Returns:
             numpy.array: array of the form {0,1}^n, where 1 means continue and 0 means stop
         """
-        writer = SummaryWriter(f'runs_dos/{self.storage_loc}_{step}_{int(time.time())}')
+        writer = SummaryWriter(f'runs_dos/{self.storage_loc}/{step}_{int(time.time())}')
         # if the weights are not copied, then a new neural network is initialized at each step in time
         if not copy:
             self.neural_stopping = OptimalStoppingOptimization(

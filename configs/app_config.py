@@ -8,20 +8,20 @@ import os
 # includes the configurations of the web application
 
 # bool, if logmodel (logsoftmax) is used; these functions have two outputs (log(p),log(1-p)) and therefore needed a specific treatment
-LOG_MODEL_TWO_OUT = False
+LOG_MODEL_TWO_OUT = True
 
 # paths, where algorithms are stored
-PATH_ONE = "neural_networks1"
-PATH_TWO = "neural_networks1_copy_const"
+SPECIAL_PATH = "output_special_log"
+PATH_ONE = "neural_networks3_log"
+PATH_TWO = "neural_networks3_log"
 
 # network, of the algorithm
-network = networks.NetworkDOS(nb_stocks=1, hidden_size=4)
-#network = networks.NetworksoftlogDOS(nb_stocks=1, hidden_size=4)
+network = networks.NetworksoftlogDOS(nb_stocks=1, hidden_size=4)
 
 
 # number of epochs, considered in the algorithm
-NB_EPOCHS_START = 50
-NB_EPOCHS = 59
+NB_EPOCHS_START = 55
+NB_EPOCHS = 60
 
 epoch = NB_EPOCHS_START
 step = 1

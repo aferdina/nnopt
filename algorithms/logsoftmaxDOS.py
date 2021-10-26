@@ -64,7 +64,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
              discounted_next_values, copy=True, h=None, new_init=False):
         """ see base class """
         writer = SummaryWriter(
-                f'runs_log/{self.storage_loc}_{step}_{int(time.time())}')
+                f'runs_log/{self.storage_loc}/{step}_{int(time.time())}')
        
         if not copy:
             self.neural_stopping = OptimalStoppingOptimization(
