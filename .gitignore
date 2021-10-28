@@ -1,0 +1,9 @@
+*.pyc
+*.pt
+*.csv
+runs
+runs_dos
+runs_log
+output
+output_special
+output_special_log
