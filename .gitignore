@@ -1,9 +1,0 @@
-*.pyc
-*.pt
-runs
-*.DS_Store
-*.csv
-runs_dos
-runs_log
-output
-output_special
