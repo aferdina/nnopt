@@ -34,7 +34,7 @@ class _DefaultConfig:
     hidden_size: Iterable[int] = (4,)
     hidden_size2: Iterable[int] = (4,)
     #number of epochs for training the neural network
-    nb_epochs: Iterable[int] = (10,)
+    nb_epochs: Iterable[int] = (5,)
     # discount factor of the game 
     gamma: Iterable[float] = (1.,)
     # parameter which defines how many times the same learning rate should be used
@@ -53,6 +53,7 @@ class _DefaultConfig:
     storage_loc: Iterable[str] = ("neural_networks3_log_copy_const",)
     # bool, whether neural net is initialized constant at 0.5
     start_const: Iterable[bool] = (True,)
+    always_const: Iterable[bool] = (False,)
     representations: Iterable[str] = ('TablePriceDuration',)
     # When adding a filter here, also add to filtering.py.
 

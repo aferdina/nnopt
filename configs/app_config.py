@@ -11,17 +11,18 @@ import os
 LOG_MODEL_TWO_OUT = True
 
 # paths, where algorithms are stored
-SPECIAL_PATH = "output_special_log"
-PATH_ONE = "neural_networks3_log"
-PATH_TWO = "neural_networks3_log"
+SPECIAL_PATH = "output"
+PATH_ONE = "neural_networks3_log_copy_const"
+PATH_TWO = "neural_networks3_log_all_const"
 
 # network, of the algorithm
+#network = networks.NetworkDOS(nb_stocks=1, hidden_size=4)
 network = networks.NetworksoftlogDOS(nb_stocks=1, hidden_size=4)
 
 
 # number of epochs, considered in the algorithm
-NB_EPOCHS_START = 55
-NB_EPOCHS = 60
+NB_EPOCHS_START = 1
+NB_EPOCHS = 5
 
 epoch = NB_EPOCHS_START
 step = 1

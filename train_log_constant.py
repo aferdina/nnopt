@@ -52,7 +52,7 @@ class TrainLOG_CONSTANT(object):
         self.writer = SummaryWriter(f'runs/weight_log_const_{int(time.time())}')
 
     def _Loss(self, X):
-        return -torch.mean(X)*2
+        return -torch.mean(torch.add(X[:,1],X[:,0]))
 
     def get_weigthts(self):
         #set up vectors

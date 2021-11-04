@@ -95,7 +95,7 @@ def _run_algos():
             config.nb_epochs, config.hidden_size, config.hidden_size2,
             config.step_size, config.gamma,
             config.eps, config.lr, config.copy,
-            config.train_ITM_only, config.use_path, config.storage_loc, config.start_const))
+            config.train_ITM_only, config.use_path, config.storage_loc, config.start_const, config.always_const))
         # random.shuffle(combinations)
         for params in combinations:
             logger.debug(f"params are {params}")
@@ -136,7 +136,7 @@ def _run_algo(
         nb_stocks, payoff, stock_model, strike,
         nb_epochs, hidden_size=10, hidden_size2=10,
         step_size=1, gamma=0.99, eps=0.001, lr=0.001, copy=True,
-        train_ITM_only=True, use_path=False, storage_loc="neural_networks_4", start_const=False):
+        train_ITM_only=True, use_path=False, storage_loc="neural_networks_4", start_const=False, always_const = False):
     """This functions runs one algo for option pricing. It is called by _run_algos()
     which is called in main(). Below the inputs are listed which have to be
     specified in the config that is passed to main().
@@ -179,7 +179,7 @@ def _run_algo(
         logger.debug("try pricer")
         try:
             pricer = _ALGOS[algo](stock_model_, payoff_, nb_epochs=nb_epochs,
-                                  hidden_size=hidden_size, use_path=use_path, eps=eps, lr=lr, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc, start_const=start_const)
+                                  hidden_size=hidden_size, use_path=use_path, eps=eps, lr=lr, copy=copy, values=[1, 2, 3, 4, 5, 6], storage_loc=storage_loc, start_const=start_const, always_const = always_const)
         except Exception:
             print(traceback.format_exc())
         logger.debug(f"pricer introduced")

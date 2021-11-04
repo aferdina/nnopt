@@ -41,7 +41,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
     """
 
     def __init__(self, model, payoff, nb_epochs=20, nb_batches=None,
-                 hidden_size=10, use_path=False, eps=0.001, lr = 0.001, copy=True, values=[1, 2, 3, 4, 5, 6], storage_loc="neural_networks_4", start_const=False):
+                 hidden_size=10, use_path=False, eps=0.001, lr = 0.001, copy=True, values=[1, 2, 3, 4, 5, 6], storage_loc="neural_networks_4", start_const=False,always_const = False):
         del nb_batches
         super().__init__(model, payoff, use_path=use_path,
                          copy=copy, values=values, storage_loc=storage_loc)
@@ -50,6 +50,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         self.storage_loc = storage_loc
         self.nb_epochs = nb_epochs
         self.start_const = start_const
+        self.always_const = always_const
         self.lr = lr
         if self.use_path:
             self.state_size = model.nb_stocks * (model.nb_dates+1)
@@ -58,7 +59,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         if self.copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-                nb_iters=self.nb_epochs, eps=self.eps, lr = self.lr, storage_loc=self.storage_loc, start_const=self.start_const)
+                nb_iters=self.nb_epochs, eps=self.eps, lr = self.lr, storage_loc=self.storage_loc, start_const=self.start_const, always_const= self.always_const)
 
     def stop(self, step, stock_values, immediate_exercise_values,
              discounted_next_values, copy=True, h=None, new_init=False):
@@ -69,7 +70,7 @@ class DeepOptimalStopping(backward_induction.AmericanOptionPricer):
         if not copy:
             self.neural_stopping = OptimalStoppingOptimization(
                 self.state_size, self.model.nb_paths, hidden_size=self.hidden_size,
-                nb_iters=self.nb_epochs, eps=self.eps, lr = self.lr, storage_loc=self.storage_loc, start_const=self.start_const)
+                nb_iters=self.nb_epochs, eps=self.eps, lr = self.lr, storage_loc=self.storage_loc, start_const=self.start_const,always_const=self.always_const)
         if self.use_path:
             # shape [paths, stocks, dates up to now]
             stock_values = np.flip(stock_values, axis=2)
@@ -100,7 +101,7 @@ class OptimalStoppingOptimization(object):
     """Train/evaluation of the neural network used for the stopping decision"""
 
     def __init__(self, nb_stocks, nb_paths, hidden_size=10, nb_iters=20,
-                 batch_size=2000, eps=0.001, lr = 0.001, storage_loc="neural_networks_4", start_const=True):
+                 batch_size=2000, eps=0.001, lr = 0.001, storage_loc="neural_networks_4", start_const=True, always_const = False):
         self.eps = eps
         self.nb_stocks = nb_stocks
         self.nb_paths = nb_paths
@@ -108,6 +109,7 @@ class OptimalStoppingOptimization(object):
         self.storage_loc = storage_loc
         self.batch_size = batch_size
         self.lr = lr
+        self.always_const = always_const
         
         self.network = networks.NetworksoftlogDOS(
             self.nb_stocks, hidden_size=hidden_size).double()
@@ -119,10 +121,14 @@ class OptimalStoppingOptimization(object):
             self.network.load_state_dict(checkpoint['model_state_dict'])
 
     def _Loss(self, X):
-        return -torch.mean(X)*2
+        return -torch.mean(torch.add(X[:,1],X[:,0]))
 
     def train_network(self, step, writer, stock_values, immediate_exercise_value,
                       discounted_next_values):
+        if self.always_const:
+            fpath = f"./output/weights_log_const/model_epoch_final.pt"
+            checkpoint = torch.load(fpath)
+            self.network.load_state_dict(checkpoint['model_state_dict'])
         # initialize optimizer for the game
         optimizer = optim.Adam(self.network.parameters(), lr = self.lr)
 
